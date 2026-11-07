@@ -6,7 +6,7 @@ default-members = ["crates/shipfile"]
 [workspace.package]
 version = "0.0.1"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.89"
 license = "MIT OR Apache-2.0"
 authors = ["Prateek Jain <jainprateek.0603@gmail.com>"]
 repository = "https://github.com/jainprateek0603/shipfile"
