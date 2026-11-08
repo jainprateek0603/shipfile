@@ -1,0 +1,534 @@
+{
+  "$defs": {
+    "DatabasePatch": {
+      "additionalProperties": false,
+      "description": "Database fields an environment may override.",
+      "properties": {
+        "size": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Size"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Postgres only."
+        }
+      },
+      "type": "object"
+    },
+    "Engine": {
+      "enum": [
+        "postgres",
+        "dynamodb"
+      ],
+      "type": "string"
+    },
+    "EnvValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "format": "int64",
+          "type": "integer"
+        },
+        {
+          "format": "double",
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
+      "description": "An environment variable value. Numbers and booleans are turned into strings."
+    },
+    "QueuePatch": {
+      "additionalProperties": false,
+      "description": "Queue fields an environment may override.",
+      "properties": {
+        "dlq": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawDlq"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RawAws": {
+      "additionalProperties": false,
+      "description": "AWS settings.",
+      "properties": {
+        "region": {
+          "description": "AWS region to deploy to, for example `ap-south-1`.",
+          "pattern": "^[a-z]{2}(-[a-z]+)+-[0-9]$",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RawDatabase": {
+      "additionalProperties": false,
+      "description": "A database.",
+      "properties": {
+        "engine": {
+          "$ref": "#/$defs/Engine",
+          "description": "`postgres` (RDS) or `dynamodb`."
+        },
+        "key": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawKey"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "DynamoDB only (required there): the table's key."
+        },
+        "size": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Size"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Postgres only: `small` or `medium`. Default `small`."
+        }
+      },
+      "required": [
+        "engine"
+      ],
+      "type": "object"
+    },
+    "RawDlq": {
+      "additionalProperties": false,
+      "description": "Dead-letter queue settings.",
+      "properties": {
+        "max_receives": {
+          "description": "Receives before a message moves to the dead-letter queue. Default 5.",
+          "format": "uint32",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RawEnvironment": {
+      "additionalProperties": false,
+      "description": "Overrides for one environment. Only fields that can safely differ between environments\nmay be overridden: a service's `build`, `runtime` and `uses` and a database's `engine` and\n`key` stay the same everywhere, so what works locally works in every environment.",
+      "properties": {
+        "aws": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawAws"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "AWS settings for this environment."
+        },
+        "databases": {
+          "additionalProperties": {
+            "$ref": "#/$defs/DatabasePatch"
+          },
+          "description": "Database overrides, by database name.",
+          "type": "object"
+        },
+        "queues": {
+          "additionalProperties": {
+            "$ref": "#/$defs/QueuePatch"
+          },
+          "description": "Queue overrides, by queue name.",
+          "type": "object"
+        },
+        "services": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ServicePatch"
+          },
+          "description": "Service overrides, by service name.",
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "RawKey": {
+      "additionalProperties": false,
+      "description": "A DynamoDB table key.",
+      "properties": {
+        "partition": {
+          "description": "Partition (hash) key attribute name.",
+          "type": "string"
+        },
+        "sort": {
+          "description": "Optional sort (range) key attribute name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "partition"
+      ],
+      "type": "object"
+    },
+    "RawPlugin": {
+      "additionalProperties": false,
+      "description": "A generator plugin, run as the program `shipfile-gen-<name>`.",
+      "properties": {
+        "name": {
+          "description": "Plugin name; the program `shipfile-gen-<name>` is looked up on `PATH`.",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": true,
+          "description": "Options passed to the plugin as JSON.",
+          "type": "object"
+        },
+        "path": {
+          "description": "Path to the plugin program, relative to `shipfile.yaml`, instead of looking it up.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "RawQueue": {
+      "additionalProperties": false,
+      "description": "An SQS queue.",
+      "properties": {
+        "dlq": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawDlq"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Dead-letter queue settings."
+        }
+      },
+      "type": "object"
+    },
+    "RawScale": {
+      "additionalProperties": false,
+      "description": "CPU, memory and replica count. Any field left out takes its default.",
+      "properties": {
+        "cpu": {
+          "description": "vCPU units: 256 is a quarter vCPU. Default 256.",
+          "enum": [
+            256,
+            512,
+            1024,
+            2048,
+            4096
+          ],
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "memory": {
+          "description": "Memory in MiB. Must suit `cpu` (Fargate sizes). Default 512.",
+          "format": "uint32",
+          "maximum": 30720,
+          "minimum": 512,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "replicas": {
+          "description": "Number of running copies. Default 1.",
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RawService": {
+      "additionalProperties": false,
+      "description": "A container service.",
+      "properties": {
+        "build": {
+          "description": "Folder with the service's code, relative to `shipfile.yaml`. A Dockerfile is generated\nthere if it has none.",
+          "type": "string"
+        },
+        "command": {
+          "description": "Command to run instead of the image's default.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "env": {
+          "additionalProperties": {
+            "$ref": "#/$defs/EnvValue"
+          },
+          "description": "Plain environment variables. Values are passed as strings.",
+          "type": "object"
+        },
+        "health": {
+          "description": "HTTP path the load balancer and local runner use to check health, for example `/healthz`.",
+          "pattern": "^/",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "port": {
+          "description": "Port the container listens on.",
+          "format": "uint32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "public": {
+          "description": "Put a load balancer in front of the service. Needs `port` and `health`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "runtime": {
+          "description": "Language runtime, for example `node22`, `python3.13`, `go1.23` or `rust`. Detected from\n`package.json`, `pyproject.toml`, `go.mod` or `Cargo.toml` when left out.",
+          "pattern": "^(node[0-9]+|python3\\.[0-9]+|go1\\.[0-9]+|rust(1\\.[0-9]+)?)$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawScale"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "CPU, memory and replica count."
+        },
+        "secrets": {
+          "description": "Names of secrets to pass as environment variables. Values live in `.env.local` locally\nand in SSM Parameter Store on AWS, never in this file.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uses": {
+          "description": "Queues and databases this service may use. Drives IAM, networking, env vars and bindings.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "build"
+      ],
+      "type": "object"
+    },
+    "ServicePatch": {
+      "additionalProperties": false,
+      "description": "Service fields an environment may override. `scale` and `env` merge key by key; the other\nfields replace the base value.",
+      "properties": {
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "env": {
+          "additionalProperties": {
+            "$ref": "#/$defs/EnvValue"
+          },
+          "type": "object"
+        },
+        "health": {
+          "pattern": "^/",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "port": {
+          "format": "uint32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "public": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "secrets": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Size": {
+      "description": "Postgres instance size.",
+      "oneOf": [
+        {
+          "const": "small",
+          "description": "`db.t4g.micro` on AWS.",
+          "type": "string"
+        },
+        {
+          "const": "medium",
+          "description": "`db.t4g.small` on AWS.",
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "$id": "https://shipfile.dev/schema/v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A Shipfile spec: one file that describes a whole service, locally and on AWS.",
+  "properties": {
+    "aws": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RawAws"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "AWS settings."
+    },
+    "databases": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RawDatabase"
+      },
+      "default": {},
+      "description": "Databases: RDS Postgres or DynamoDB tables.",
+      "type": "object"
+    },
+    "environments": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RawEnvironment"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "default": {},
+      "description": "Per-environment overrides (for example `dev` and `prod`), applied with `-e <env>`.",
+      "type": "object"
+    },
+    "name": {
+      "description": "Application name. Used in stack and resource names, so it must be DNS-safe.",
+      "type": "string"
+    },
+    "plugins": {
+      "default": [],
+      "description": "Generator plugins to run. Only plugins listed here ever run.",
+      "items": {
+        "$ref": "#/$defs/RawPlugin"
+      },
+      "type": "array"
+    },
+    "queues": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RawQueue"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "default": {},
+      "description": "SQS queues. Each one gets a dead-letter queue.",
+      "type": "object"
+    },
+    "services": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RawService"
+      },
+      "default": {},
+      "description": "Containers to run: public services behind a load balancer, or private workers.",
+      "type": "object"
+    },
+    "version": {
+      "description": "Spec format version. Must be `1`.",
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "version",
+    "name"
+  ],
+  "title": "Shipfile spec, version 1",
+  "type": "object"
+}

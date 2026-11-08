@@ -177,13 +177,35 @@ fn explain(doc: &Document, schema: &Json, error: &ValidationError<'_>, out: &mut
             let depth = path.len();
             let meant = context.iter().find(|branch| {
                 branch.iter().any(|e| {
-                    segments(e.instance_path()).len() > depth || !matches!(e.kind(), ValidationErrorKind::Type { .. })
+                    segments(e.instance_path()).len() > depth
+                        || !matches!(e.kind(), ValidationErrorKind::Type { .. } | ValidationErrorKind::Constant { .. })
                 })
             });
+            // Documented enums are generated as `oneOf` a list of `const`s.
+            let consts: Vec<String> = context
+                .iter()
+                .flatten()
+                .filter_map(|e| match e.kind() {
+                    ValidationErrorKind::Constant { expected_value } => {
+                        Some(expected_value.as_str().map_or(expected_value.to_string(), str::to_owned))
+                    }
+                    _ => None,
+                })
+                .collect();
             if let Some(branch) = meant {
                 for inner in branch {
                     explain(doc, schema, inner, out);
                 }
+            } else if !consts.is_empty() && instance.is_string() {
+                let help = instance
+                    .as_str()
+                    .and_then(|v| did_you_mean(v, consts.iter().map(String::as_str)))
+                    .unwrap_or_else(|| format!("use one of {}", backticked(&consts)));
+                out.push(
+                    Diagnostic::error(Code::InvalidValue, format!("invalid value {instance} for {}", dotted(&path)))
+                        .at(doc.span(&refs), format!("not one of {}", backticked(&consts)))
+                        .with_help(help),
+                );
             } else {
                 let expected: Vec<String> = context
                     .iter()
@@ -257,6 +279,14 @@ mod tests {
         let errs = errors("version: 1\nname: x\nservices:\n  api:\n    build: .\n    scale: { cpu: lots }\n");
         assert_eq!(errs.len(), 1, "{errs:#?}");
         assert!(errs[0].message.contains("services.api.scale.cpu"), "{errs:#?}");
+    }
+
+    #[test]
+    fn documented_enums_suggest_values() {
+        let errs = errors("version: 1\nname: x\ndatabases:\n  db:\n    engine: postgres\n    size: medum\n");
+        assert_eq!(errs.len(), 1, "{errs:#?}");
+        assert_eq!(errs[0].code, Code::InvalidValue);
+        assert_eq!(errs[0].help.as_deref(), Some("did you mean `medium`?"));
     }
 
     #[test]

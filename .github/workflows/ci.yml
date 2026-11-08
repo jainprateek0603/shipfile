@@ -26,6 +26,15 @@ jobs:
           components: rustfmt
       - run: cargo fmt --all --check
 
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Committed schema matches the spec types
+        run: cargo xtask schema --check
+
   test:
     name: test (${{ matrix.os }})
     strategy:
