@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/*"]
+members = ["crates/*", "xtask"]
 default-members = ["crates/shipfile"]
 
 [workspace.package]
@@ -25,9 +25,18 @@ miette = { version = "7.6.0", features = ["fancy"] }
 owo-colors = { version = "4.4.0", features = ["supports-colors"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
+serde-saphyr = { version = "2.1.1", default-features = false, features = ["deserialize"] }
+schemars = "1.2.3"
+jsonschema = { version = "0.60.2", default-features = false }
+strsim = "0.11.1"
+thiserror = "2.0.21"
+inquire = "0.9.4"
 
 assert_cmd = "2.2.2"
 predicates = "3.1.4"
+assert_fs = "1.1.4"
+insta = { version = "1.49.0", features = ["glob", "json"] }
+proptest = "1.12.0"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
