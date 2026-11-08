@@ -188,6 +188,15 @@ pub enum Size {
     Medium,
 }
 
+impl Size {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Small => "small",
+            Self::Medium => "medium",
+        }
+    }
+}
+
 /// A DynamoDB table key.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
