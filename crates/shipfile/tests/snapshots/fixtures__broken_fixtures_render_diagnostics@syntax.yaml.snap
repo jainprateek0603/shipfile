@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/syntax.yaml
+---
+error[E001]: invalid YAML: illegal placement of ':' indicator
+  ┌─ syntax.yaml:8:7
+  │
+ 8│ queues:
+  │       ^ here
+  │
+  = help: fix the YAML syntax; a YAML linter or your editor's YAML support can help
+
+error: syntax.yaml has 1 error

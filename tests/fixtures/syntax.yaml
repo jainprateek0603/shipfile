@@ -1,0 +1,9 @@
+# E001: an unclosed flow sequence
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    uses: [orders-queue
+queues:
+  orders-queue:

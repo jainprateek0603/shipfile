@@ -1,0 +1,10 @@
+# E013: the same resource twice in `uses`
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    uses: [jobs, jobs]
+queues:
+  jobs:

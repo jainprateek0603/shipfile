@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/dynamodb-no-key.yaml
+---
+error[E017]: DynamoDB table `sessions` has no `key`
+  ┌─ dynamodb-no-key.yaml:5:3
+  │
+ 5│   sessions:
+  │   ^^^^^^^^ needs a partition key
+  │
+  = help: add `key: { partition: id }` (a `sort` key is optional)
+
+error: dynamodb-no-key.yaml has 1 error

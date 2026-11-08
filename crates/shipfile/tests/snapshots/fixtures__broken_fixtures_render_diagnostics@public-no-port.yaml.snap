@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/public-no-port.yaml
+---
+error[E015]: public service `api` has no `port`
+  ┌─ public-no-port.yaml:8:13
+  │
+ 8│     public: true
+  │             ^^^^ public services need a port for the load balancer
+  │
+  = help: add `port:` with the port the service listens on
+
+error: public-no-port.yaml has 1 error

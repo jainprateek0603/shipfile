@@ -1,0 +1,6 @@
+# E010: a name that isn't DNS-safe
+version: 1
+name: shop
+databases:
+  Main_DB:
+    engine: postgres

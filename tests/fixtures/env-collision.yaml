@@ -1,0 +1,12 @@
+# E022: an env var shipfile already sets
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    uses: [orders-queue]
+    env:
+      ORDERS_QUEUE_URL: http://example.com
+queues:
+  orders-queue:

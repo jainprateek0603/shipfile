@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/bad-enum.yaml
+---
+error[E006]: invalid value "medum" for `databases.main-db.size`
+  ┌─ bad-enum.yaml:7:11
+  │
+ 7│     size: medum
+  │           ^^^^^ not one of `small`, `medium`
+  │
+  = help: did you mean `medium`?
+
+error: bad-enum.yaml has 1 error

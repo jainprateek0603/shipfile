@@ -1,0 +1,7 @@
+# E018: a DynamoDB key on a Postgres database
+version: 1
+name: shop
+databases:
+  main-db:
+    engine: postgres
+    key: { partition: id }

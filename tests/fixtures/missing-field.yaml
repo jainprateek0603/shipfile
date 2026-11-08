@@ -1,0 +1,7 @@
+# E005: a service without `build`
+version: 1
+name: shop
+services:
+  api:
+    runtime: node22
+    port: 3000

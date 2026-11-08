@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/fargate-size.yaml
+---
+error[E019]: service `api` can't have 512 MiB with cpu 1024
+  ┌─ fargate-size.yaml:8:33
+  │
+ 8│     scale: { cpu: 1024, memory: 512 }
+  │                                 ^^^ not a Fargate size
+  │
+  = help: with cpu 1024, memory can be 2048 to 8192 in steps of 1024
+
+error: fargate-size.yaml has 1 error

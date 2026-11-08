@@ -1,0 +1,13 @@
+# E012: the PLAN §4.3 example, a typo in `uses`
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    uses: [orders-qeue, main-db]
+queues:
+  orders-queue:
+databases:
+  main-db:
+    engine: postgres

@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/use-service.yaml
+---
+error[E012]: unknown resource `worker` in `uses`
+  ┌─ use-service.yaml:8:12
+  │
+ 8│     uses: [worker]
+  │            ^^^^^^ `worker` is a service
+  │
+  = help: `uses` lists queues and databases; services call each other over HTTP
+
+error: use-service.yaml has 1 error

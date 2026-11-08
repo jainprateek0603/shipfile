@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/engine-field.yaml
+---
+error[E018]: `key` can't be set on database `main-db`
+  ┌─ engine-field.yaml:7:5
+  │
+ 7│     key: { partition: id }
+  │     ^^^ `key` is only for dynamodb databases
+  │
+  = help: remove `key`, or set `engine: dynamodb`
+
+error: engine-field.yaml has 1 error

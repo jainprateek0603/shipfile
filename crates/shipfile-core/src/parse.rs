@@ -190,6 +190,12 @@ fn syntax_error(source: &str, err: &serde_saphyr::Error) -> Diagnostic {
 fn first_line(message: &str) -> String {
     let line = message.lines().next().unwrap_or(message).trim();
     let line = line.split(" at line ").next().unwrap_or(line);
+    let line = line.strip_prefix("error: ").unwrap_or(line);
+    // Drop a leading `line N column M: `; the snippet already shows where.
+    let line = match line.split_once(": ") {
+        Some((position, rest)) if position.starts_with("line ") && position.contains(" column ") => rest,
+        _ => line,
+    };
     line.trim_end_matches('.').to_owned()
 }
 

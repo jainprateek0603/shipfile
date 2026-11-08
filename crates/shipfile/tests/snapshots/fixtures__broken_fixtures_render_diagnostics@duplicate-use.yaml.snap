@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/duplicate-use.yaml
+---
+error[E013]: `jobs` is listed twice in `uses`
+  ┌─ duplicate-use.yaml:8:18
+  │
+ 8│     uses: [jobs, jobs]
+  │                  ^^^^ listed again here
+  │
+  = help: remove the repeated entry
+
+error: duplicate-use.yaml has 1 error

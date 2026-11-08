@@ -1,0 +1,8 @@
+# E003: a typo in a field name
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    prot: 3000

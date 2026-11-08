@@ -1,0 +1,12 @@
+# E016: an environment making a service public without a health path
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    port: 3000
+environments:
+  prod:
+    services:
+      api: { public: true }

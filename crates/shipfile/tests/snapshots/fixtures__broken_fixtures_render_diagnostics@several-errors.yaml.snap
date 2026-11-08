@@ -1,0 +1,38 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/several-errors.yaml
+---
+error[E010]: invalid app name `Shop`
+  ┌─ several-errors.yaml:3:7
+  │
+ 3│ name: Shop
+  │       ^^^^ contains `S`; only lowercase letters, digits and `-` are allowed
+  │
+  = help: names must be DNS-safe; try `shop`
+
+error[E012]: unknown resource `cache` in `uses`
+  ┌─ several-errors.yaml:8:12
+  │
+ 8│     uses: [cache]
+  │            ^^^^^ not defined under `queues` or `databases`
+  │
+  = help: define `cache` under `queues` or `databases`
+
+error[E015]: public service `api` has no `port`
+  ┌─ several-errors.yaml:9:13
+  │
+ 9│     public: true
+  │             ^^^^ public services need a port for the load balancer
+  │
+  = help: add `port:` with the port the service listens on
+
+error[E016]: public service `api` has no `health` path
+  ┌─ several-errors.yaml:9:13
+  │
+ 9│     public: true
+  │             ^^^^ public services need a health check
+  │
+  = help: add `health: /healthz`, a path that returns 200 when the service is ready
+
+error: several-errors.yaml has 4 errors

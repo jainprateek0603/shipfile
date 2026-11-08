@@ -1,0 +1,8 @@
+# E019: memory that doesn't suit the CPU size
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    scale: { cpu: 1024, memory: 512 }

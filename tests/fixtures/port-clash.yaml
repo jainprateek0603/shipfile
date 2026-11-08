@@ -1,0 +1,12 @@
+# E014: two services on one port
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    port: 8080
+  admin:
+    build: .
+    runtime: node22
+    port: 8080

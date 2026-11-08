@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/bad-version.yaml
+---
+error[E007]: unsupported spec version 2
+  ┌─ bad-version.yaml:2:10
+  │
+ 2│ version: 2
+  │          ^ this shipfile only understands version 1
+  │
+  = help: set `version: 1`, or install a newer shipfile
+
+error: bad-version.yaml has 1 error
