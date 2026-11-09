@@ -1,0 +1,384 @@
+{
+  "$defs": {
+    "Aws": {
+      "additionalProperties": false,
+      "description": "AWS settings.",
+      "properties": {
+        "region": {
+          "description": "AWS region to deploy to, for example `ap-south-1`. Falls back to `AWS_REGION`.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Database": {
+      "additionalProperties": false,
+      "description": "A database.",
+      "properties": {
+        "engine": {
+          "$ref": "#/$defs/Engine",
+          "description": "`postgres` (RDS) or `dynamodb`."
+        },
+        "key": {
+          "$ref": "#/$defs/TableKey",
+          "description": "DynamoDB only: the table key. Required for DynamoDB."
+        },
+        "size": {
+          "$ref": "#/$defs/Size",
+          "description": "Postgres only: `small` or `medium`; maps to an instance class. Default `small`."
+        }
+      },
+      "required": [
+        "engine"
+      ],
+      "type": "object"
+    },
+    "DatabasePatch": {
+      "additionalProperties": false,
+      "description": "Database fields an environment may override.",
+      "properties": {
+        "size": {
+          "$ref": "#/$defs/Size",
+          "description": "Postgres only: instance size."
+        }
+      },
+      "type": "object"
+    },
+    "Dlq": {
+      "additionalProperties": false,
+      "description": "Dead-letter queue settings.",
+      "properties": {
+        "max_receives": {
+          "description": "How many times a message is received before it moves to the dead-letter queue. Default 5.",
+          "format": "uint32",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Engine": {
+      "description": "Database engine: `postgres` (RDS; a `postgres` container locally) or `dynamodb`\n(DynamoDB Local locally).",
+      "enum": [
+        "postgres",
+        "dynamodb"
+      ],
+      "type": "string"
+    },
+    "Environment": {
+      "additionalProperties": false,
+      "description": "Overrides for one environment. Only fields that exist in the base spec can be changed.",
+      "properties": {
+        "aws": {
+          "$ref": "#/$defs/Aws",
+          "description": "AWS settings for this environment."
+        },
+        "databases": {
+          "additionalProperties": {
+            "$ref": "#/$defs/DatabasePatch"
+          },
+          "description": "Database overrides, keyed by an existing database name.",
+          "type": "object"
+        },
+        "queues": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Queue"
+          },
+          "description": "Queue overrides, keyed by an existing queue name.",
+          "type": "object"
+        },
+        "services": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ServicePatch"
+          },
+          "description": "Service overrides, keyed by an existing service name.",
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "Plugin": {
+      "additionalProperties": false,
+      "description": "A generator plugin (an external program named `shipfile-gen-<name>`).",
+      "properties": {
+        "name": {
+          "description": "Plugin name; the program `shipfile-gen-<name>` is looked up on `PATH`.",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": true,
+          "description": "Options passed to the plugin as-is.",
+          "type": "object"
+        },
+        "path": {
+          "description": "Explicit path to the plugin program, relative to the spec file.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "Queue": {
+      "additionalProperties": false,
+      "description": "An SQS queue.",
+      "properties": {
+        "dlq": {
+          "$ref": "#/$defs/Dlq",
+          "description": "Dead-letter queue settings. Every queue has one."
+        }
+      },
+      "type": "object"
+    },
+    "Runtime": {
+      "description": "Language runtime of a service.",
+      "enum": [
+        "node20",
+        "node22",
+        "node24",
+        "python3.12",
+        "python3.13",
+        "go1.24",
+        "go1.25",
+        "rust"
+      ],
+      "type": "string"
+    },
+    "Scale": {
+      "additionalProperties": false,
+      "description": "CPU, memory and replica count. Values follow Fargate's allowed sizes.",
+      "properties": {
+        "cpu": {
+          "description": "CPU units (1024 = one vCPU). Default 256.",
+          "enum": [
+            256,
+            512,
+            1024,
+            2048,
+            4096
+          ],
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "memory": {
+          "description": "Memory in MiB. Default 512.",
+          "format": "uint32",
+          "maximum": 30720,
+          "minimum": 512,
+          "type": "integer"
+        },
+        "replicas": {
+          "description": "Number of running copies. Default 1.",
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Service": {
+      "additionalProperties": false,
+      "description": "A container that runs your code.",
+      "properties": {
+        "build": {
+          "description": "Build context, relative to the spec file. A Dockerfile is generated here if missing.",
+          "type": "string"
+        },
+        "command": {
+          "description": "Command to run instead of the image default.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "env": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Plain environment variables.",
+          "type": "object"
+        },
+        "health": {
+          "description": "HTTP path the load balancer and local health checks call, for example `/healthz`.",
+          "type": "string"
+        },
+        "port": {
+          "description": "Port the container listens on.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "public": {
+          "description": "Put a load balancer in front of this service. Needs `port` and `health`.",
+          "type": "boolean"
+        },
+        "runtime": {
+          "$ref": "#/$defs/Runtime",
+          "description": "Language runtime. Optional: detected from `package.json`, `pyproject.toml`, `go.mod`\nor `Cargo.toml` in the build folder."
+        },
+        "scale": {
+          "$ref": "#/$defs/Scale",
+          "description": "CPU, memory and replica count."
+        },
+        "secrets": {
+          "description": "Secret names. Read from `.env.local` locally and from SSM Parameter Store on AWS.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uses": {
+          "description": "Queues and databases this service may use. Each one becomes environment variables,\nIAM permissions and network access.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "build"
+      ],
+      "type": "object"
+    },
+    "ServicePatch": {
+      "additionalProperties": false,
+      "description": "Service fields an environment may override. Maps are merged by key; lists are replaced.",
+      "properties": {
+        "command": {
+          "description": "Command to run instead of the image default.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "env": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Extra or changed environment variables; merged by name.",
+          "type": "object"
+        },
+        "health": {
+          "description": "Health-check path.",
+          "type": "string"
+        },
+        "port": {
+          "description": "Port the container listens on.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "public": {
+          "description": "Put a load balancer in front of this service.",
+          "type": "boolean"
+        },
+        "scale": {
+          "$ref": "#/$defs/Scale",
+          "description": "CPU, memory and replica count; merged field by field."
+        },
+        "secrets": {
+          "description": "Replaces the secret list.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "Size": {
+      "description": "Postgres instance size: `small` (`db.t4g.micro`) or `medium` (`db.t4g.small`).",
+      "enum": [
+        "small",
+        "medium"
+      ],
+      "type": "string"
+    },
+    "TableKey": {
+      "additionalProperties": false,
+      "description": "DynamoDB table key.",
+      "properties": {
+        "partition": {
+          "description": "Partition (hash) key attribute name.",
+          "type": "string"
+        },
+        "sort": {
+          "description": "Optional sort (range) key attribute name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "partition"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://shipfile.dev/schema/v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A Shipfile spec: one file describing services, queues and databases, run locally with\nDocker and deployed to AWS.",
+  "properties": {
+    "aws": {
+      "$ref": "#/$defs/Aws",
+      "description": "AWS settings."
+    },
+    "databases": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Database"
+      },
+      "description": "Databases (RDS Postgres or DynamoDB), keyed by name.",
+      "type": "object"
+    },
+    "environments": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Environment"
+      },
+      "description": "Per-environment overrides, keyed by environment name (for example `dev` or `prod`).",
+      "type": "object"
+    },
+    "name": {
+      "description": "Application name. Lowercase letters, digits and hyphens; used to name stacks and resources.",
+      "type": "string"
+    },
+    "plugins": {
+      "description": "Generator plugins to run, in order.",
+      "items": {
+        "$ref": "#/$defs/Plugin"
+      },
+      "type": "array"
+    },
+    "queues": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Queue"
+      },
+      "description": "SQS queues (ElasticMQ locally), keyed by name. Each gets a dead-letter queue.",
+      "type": "object"
+    },
+    "services": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Service"
+      },
+      "description": "Containers that run your code, keyed by name.",
+      "type": "object"
+    },
+    "version": {
+      "const": 1,
+      "description": "Spec format version. Always `1`.",
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "version",
+    "name"
+  ],
+  "title": "shipfile.yaml (v1)",
+  "type": "object"
+}
