@@ -1,0 +1,25 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e005-wrong-type.yaml
+---
+[
+  {
+    "code": "E005",
+    "severity": "error",
+    "message": "`services.api.port` must be a whole number",
+    "file": "e005-wrong-type.yaml",
+    "line": 6,
+    "column": 11,
+    "label": "this is a string"
+  },
+  {
+    "code": "E005",
+    "severity": "error",
+    "message": "`services.api.uses` must be a list",
+    "file": "e005-wrong-type.yaml",
+    "line": 7,
+    "column": 11,
+    "label": "this is a string"
+  }
+]

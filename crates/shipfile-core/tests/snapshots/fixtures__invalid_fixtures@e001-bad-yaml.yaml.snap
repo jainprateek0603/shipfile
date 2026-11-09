@@ -1,0 +1,10 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e001-bad-yaml.yaml
+---
+error[E001]: invalid YAML
+  ┌─ e001-bad-yaml.yaml:6:11
+  │
+6 │     uses: [orders-queue
+  │           ^ unclosed bracket '[' at line 6, column 11

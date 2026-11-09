@@ -1,0 +1,8 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    env:
+      log-level: info
+    secrets: [9LIVES]

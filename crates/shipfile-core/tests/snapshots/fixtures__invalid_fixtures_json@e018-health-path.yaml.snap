@@ -1,0 +1,19 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e018-health-path.yaml
+---
+[
+  {
+    "code": "E018",
+    "severity": "error",
+    "message": "`health` of `api` must start with `/`",
+    "file": "e018-health-path.yaml",
+    "line": 8,
+    "column": 13,
+    "label": "not an absolute path",
+    "help": [
+      "try `/healthz`"
+    ]
+  }
+]

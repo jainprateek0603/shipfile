@@ -1,0 +1,12 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e025-duplicate-plugin.yaml
+---
+error[E025]: plugin `cost-tags` is listed twice
+  ┌─ e025-duplicate-plugin.yaml:8:11
+  │
+7 │   - name: cost-tags
+  │           --------- first listed here
+8 │   - name: cost-tags
+  │           ^^^^^^^^^ listed again here

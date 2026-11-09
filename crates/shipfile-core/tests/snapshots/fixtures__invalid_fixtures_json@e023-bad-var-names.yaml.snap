@@ -1,0 +1,31 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e023-bad-var-names.yaml
+---
+[
+  {
+    "code": "E023",
+    "severity": "error",
+    "message": "`log-level` is not a valid environment variable name",
+    "file": "e023-bad-var-names.yaml",
+    "line": 7,
+    "column": 7,
+    "label": "use letters, digits and `_`, not starting with a digit",
+    "help": [
+      "try `LOG_LEVEL`"
+    ]
+  },
+  {
+    "code": "E023",
+    "severity": "error",
+    "message": "`9LIVES` is not a valid secret name",
+    "file": "e023-bad-var-names.yaml",
+    "line": 8,
+    "column": 15,
+    "label": "use letters, digits and `_`, not starting with a digit",
+    "help": [
+      "try `_9LIVES`"
+    ]
+  }
+]

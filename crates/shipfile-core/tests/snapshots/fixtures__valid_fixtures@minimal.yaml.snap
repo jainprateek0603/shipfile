@@ -1,0 +1,48 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: out
+input_file: crates/shipfile-core/tests/fixtures/valid/minimal.yaml
+---
+== env: (none) ==
+hello
+└─ services
+   └─ web  node22 · private · 1×256cpu/512MiB
+{
+  "service": "web",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "us-east-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    }
+  ],
+  "iam": [],
+  "network": []
+}

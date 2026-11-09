@@ -1,0 +1,19 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e003-unknown-top-level.yaml
+---
+[
+  {
+    "code": "E003",
+    "severity": "error",
+    "message": "unknown field `service` in the top level",
+    "file": "e003-unknown-top-level.yaml",
+    "line": 3,
+    "column": 1,
+    "label": "not a known field",
+    "help": [
+      "did you mean `services`?"
+    ]
+  }
+]

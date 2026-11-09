@@ -1,0 +1,9 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+environments:
+  prod:
+    services:
+      api: { build: ./other }

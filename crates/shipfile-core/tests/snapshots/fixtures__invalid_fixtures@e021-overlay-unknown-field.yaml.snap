@@ -1,0 +1,12 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e021-overlay-unknown-field.yaml
+---
+error[E003]: unknown field `build` in `environments.prod.services.api`
+  ┌─ e021-overlay-unknown-field.yaml:9:14
+  │
+9 │       api: { build: ./other }
+  │              ^^^^^ not a known field
+  │
+  = help: known fields: command, env, health, port, public, scale, secrets

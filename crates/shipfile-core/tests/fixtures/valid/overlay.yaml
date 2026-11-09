@@ -1,0 +1,22 @@
+version: 1
+name: shop
+services:
+  api:
+    build: ./api
+    port: 8080
+    env: { LOG_LEVEL: debug, FEATURE_X: "on" }
+    uses: [carts]
+databases:
+  carts:
+    engine: dynamodb
+    key: { partition: user_id, sort: item_id }
+environments:
+  dev: {}
+  prod:
+    aws: { region: eu-west-1 }
+    services:
+      api:
+        public: true
+        health: /health
+        env: { LOG_LEVEL: warn }
+        scale: { replicas: 3, cpu: 512, memory: 1024 }

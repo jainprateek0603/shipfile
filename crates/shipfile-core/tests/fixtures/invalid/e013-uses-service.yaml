@@ -1,0 +1,8 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    uses: [worker]
+  worker:
+    build: ./worker

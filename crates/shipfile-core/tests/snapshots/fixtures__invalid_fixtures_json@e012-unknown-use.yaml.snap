@@ -1,0 +1,31 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e012-unknown-use.yaml
+---
+[
+  {
+    "code": "E012",
+    "severity": "error",
+    "message": "unknown resource `orders-qeue` in `uses`",
+    "file": "e012-unknown-use.yaml",
+    "line": 6,
+    "column": 12,
+    "label": "not defined under `queues` or `databases`",
+    "help": [
+      "did you mean `orders-queue`?"
+    ]
+  },
+  {
+    "code": "W001",
+    "severity": "warning",
+    "message": "`orders-queue` is not used by any service",
+    "file": "e012-unknown-use.yaml",
+    "line": 8,
+    "column": 3,
+    "label": "unused",
+    "help": [
+      "add `orders-queue` to a service's `uses`, or remove it"
+    ]
+  }
+]

@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e025-duplicate-plugin.yaml
+---
+[
+  {
+    "code": "E025",
+    "severity": "error",
+    "message": "plugin `cost-tags` is listed twice",
+    "file": "e025-duplicate-plugin.yaml",
+    "line": 8,
+    "column": 11,
+    "label": "listed again here"
+  }
+]

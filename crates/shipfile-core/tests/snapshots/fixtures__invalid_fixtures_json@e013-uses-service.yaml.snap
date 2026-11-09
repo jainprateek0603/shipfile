@@ -1,0 +1,19 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e013-uses-service.yaml
+---
+[
+  {
+    "code": "E013",
+    "severity": "error",
+    "message": "`worker` in `uses` is a service",
+    "file": "e013-uses-service.yaml",
+    "line": 6,
+    "column": 12,
+    "label": "services cannot be used like queues or databases",
+    "help": [
+      "to call another service, use its URL; only queues and databases go in `uses`"
+    ]
+  }
+]

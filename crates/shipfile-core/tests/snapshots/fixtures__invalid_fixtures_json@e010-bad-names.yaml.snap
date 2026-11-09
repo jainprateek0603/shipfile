@@ -1,0 +1,55 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e010-bad-names.yaml
+---
+[
+  {
+    "code": "E010",
+    "severity": "error",
+    "message": "app name `Orders_App` is not DNS-safe",
+    "file": "e010-bad-names.yaml",
+    "line": 2,
+    "column": 7,
+    "label": "use only lowercase letters, digits and `-`",
+    "help": [
+      "names become AWS resource names; try `orders-app`"
+    ]
+  },
+  {
+    "code": "E010",
+    "severity": "error",
+    "message": "service name `API` is not DNS-safe",
+    "file": "e010-bad-names.yaml",
+    "line": 4,
+    "column": 3,
+    "label": "use only lowercase letters, digits and `-`",
+    "help": [
+      "names become AWS resource names; try `api`"
+    ]
+  },
+  {
+    "code": "E010",
+    "severity": "error",
+    "message": "queue name `jobs--high` is not DNS-safe",
+    "file": "e010-bad-names.yaml",
+    "line": 7,
+    "column": 3,
+    "label": "names cannot contain `--`",
+    "help": [
+      "names become AWS resource names; try `jobs-high`"
+    ]
+  },
+  {
+    "code": "W001",
+    "severity": "warning",
+    "message": "`jobs--high` is not used by any service",
+    "file": "e010-bad-names.yaml",
+    "line": 7,
+    "column": 3,
+    "label": "unused",
+    "help": [
+      "add `jobs--high` to a service's `uses`, or remove it"
+    ]
+  }
+]

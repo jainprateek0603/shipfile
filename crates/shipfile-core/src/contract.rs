@@ -49,9 +49,13 @@ pub struct EnvVar {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum LocalValue {
-    Literal { value: String },
+    Literal {
+        value: String,
+    },
     /// Read from `.env.local`.
-    DotEnv { key: String },
+    DotEnv {
+        key: String,
+    },
 }
 
 /// A variable's value on AWS, as a CloudFormation-level reference.
@@ -137,8 +141,10 @@ pub fn db_name(resource: &str) -> String {
 pub fn resource_var_names(kind: ResourceKind, resource: &str) -> Vec<String> {
     let p = var_prefix(resource);
     match kind {
-        ResourceKind::Queue => vec![format!("{p}_QUEUE_URL")],
-        ResourceKind::Postgres => ["HOST", "PORT", "NAME", "USER", "PASSWORD"].iter().map(|s| format!("{p}_{s}")).collect(),
+        ResourceKind::Queue => vec![format!("{p}_URL")],
+        ResourceKind::Postgres => {
+            ["HOST", "PORT", "NAME", "USER", "PASSWORD"].iter().map(|s| format!("{p}_{s}")).collect()
+        }
         ResourceKind::Dynamodb => vec![format!("{p}_TABLE")],
     }
 }
@@ -147,6 +153,38 @@ pub fn resource_var_names(kind: ResourceKind, resource: &str) -> Vec<String> {
 pub const PLATFORM_VARS: &[&str] =
     &["AWS_ACCESS_KEY_ID", "AWS_ENDPOINT_URL_DYNAMODB", "AWS_ENDPOINT_URL_SQS", "AWS_REGION", "AWS_SECRET_ACCESS_KEY"];
 
+fn lit(value: &str) -> LocalValue {
+    LocalValue::Literal { value: value.to_owned() }
+}
+
+/// The five variables of a Postgres database (PLAN §5.2).
+fn postgres_vars(resource: &str, source: &str) -> Vec<EnvVar> {
+    let db = db_name(resource);
+    let get_att = |attribute: &str| AwsValue::GetAtt { resource: source.to_owned(), attribute: attribute.to_owned() };
+    let parts = [
+        ("HOST", lit(LOCAL_POSTGRES_HOST), get_att("Endpoint.Address"), false),
+        ("PORT", lit(&POSTGRES_PORT.to_string()), get_att("Endpoint.Port"), false),
+        ("NAME", lit(&db), AwsValue::Literal { value: db.clone() }, false),
+        ("USER", lit(POSTGRES_USER), AwsValue::Literal { value: POSTGRES_USER.to_owned() }, false),
+        (
+            "PASSWORD",
+            lit(POSTGRES_USER),
+            AwsValue::ManagedSecret { resource: source.to_owned(), json_key: "password".to_owned() },
+            true,
+        ),
+    ];
+    parts
+        .into_iter()
+        .map(|(part, local, aws, secret)| EnvVar {
+            name: format!("{}_{part}", var_prefix(resource)),
+            source: source.to_owned(),
+            local,
+            aws: Some(aws),
+            secret,
+        })
+        .collect()
+}
+
 impl Model {
     /// The env contract for one service. Returns `None` if the service does not exist.
     pub fn contract(&self, service: &str) -> Option<EnvContract> {
@@ -154,7 +192,6 @@ impl Model {
         let mut vars = Vec::new();
         let mut iam = Vec::new();
         let mut network = Vec::new();
-        let lit = |v: &str| LocalValue::Literal { value: v.to_owned() };
         let env_name = self.app.env.as_deref().unwrap_or("default");
 
         for u in self.uses_of(service) {
@@ -183,39 +220,7 @@ impl Model {
                 }
                 ResourceKind::Postgres => {
                     debug_assert!(matches!(self.databases.get(&u.resource), Some(Database::Postgres { .. })));
-                    let db = db_name(&u.resource);
-                    let port = POSTGRES_PORT.to_string();
-                    let parts: [(&str, LocalValue, AwsValue, bool); 5] = [
-                        (
-                            "HOST",
-                            lit(LOCAL_POSTGRES_HOST),
-                            AwsValue::GetAtt { resource: source.clone(), attribute: "Endpoint.Address".to_owned() },
-                            false,
-                        ),
-                        (
-                            "PORT",
-                            lit(&port),
-                            AwsValue::GetAtt { resource: source.clone(), attribute: "Endpoint.Port".to_owned() },
-                            false,
-                        ),
-                        ("NAME", lit(&db), AwsValue::Literal { value: db.clone() }, false),
-                        ("USER", lit(POSTGRES_USER), AwsValue::Literal { value: POSTGRES_USER.to_owned() }, false),
-                        (
-                            "PASSWORD",
-                            lit(POSTGRES_USER),
-                            AwsValue::ManagedSecret { resource: source.clone(), json_key: "password".to_owned() },
-                            true,
-                        ),
-                    ];
-                    for (part, local, aws, secret) in parts {
-                        vars.push(EnvVar {
-                            name: format!("{}_{part}", var_prefix(&u.resource)),
-                            source: source.clone(),
-                            local,
-                            aws: Some(aws),
-                            secret,
-                        });
-                    }
+                    vars.extend(postgres_vars(&u.resource, &source));
                     iam.push(IamGrant {
                         role: Role::Execution,
                         resource: source,
@@ -236,7 +241,11 @@ impl Model {
             });
         }
         if !svc.secrets.is_empty() {
-            iam.push(IamGrant { role: Role::Execution, resource: "secrets".to_owned(), actions: vec!["ssm:GetParameters"] });
+            iam.push(IamGrant {
+                role: Role::Execution,
+                resource: "secrets".to_owned(),
+                actions: vec!["ssm:GetParameters"],
+            });
         }
 
         for (key, value) in &svc.env {

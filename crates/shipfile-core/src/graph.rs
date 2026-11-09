@@ -4,6 +4,9 @@ use std::fmt::Write as _;
 
 use crate::model::{Database, Model};
 
+/// One tree entry: name, one-line facts, child lines.
+type Item = (String, String, Vec<String>);
+
 /// An indented tree, for people.
 pub fn tree(model: &Model) -> String {
     let mut out = String::new();
@@ -17,7 +20,7 @@ pub fn tree(model: &Model) -> String {
     out.push_str(&header);
     out.push('\n');
 
-    let mut sections: Vec<(&str, Vec<(String, String, Vec<String>)>)> = Vec::new();
+    let mut sections: Vec<(&str, Vec<Item>)> = Vec::new();
     sections.push((
         "services",
         model
@@ -94,7 +97,8 @@ pub fn dot(model: &Model) -> String {
         let _ = writeln!(out, "  \"queues.{name}\" [label=\"{name}\\n(sqs)\", shape=cds];");
     }
     for (name, db) in &model.databases {
-        let _ = writeln!(out, "  \"databases.{name}\" [label=\"{name}\\n({})\", shape=cylinder];", db.engine().as_str());
+        let _ =
+            writeln!(out, "  \"databases.{name}\" [label=\"{name}\\n({})\", shape=cylinder];", db.engine().as_str());
     }
     for u in &model.uses {
         let _ = writeln!(out, "  \"services.{}\" -> \"{}.{}\";", u.service, u.kind.section(), u.resource);

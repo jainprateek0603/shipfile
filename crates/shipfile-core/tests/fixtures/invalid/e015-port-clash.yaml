@@ -1,0 +1,16 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    port: 3000
+  admin:
+    build: ./admin
+    port: 3000
+  db-proxy:
+    build: ./proxy
+    port: 5432
+    uses: [main-db]
+databases:
+  main-db:
+    engine: postgres

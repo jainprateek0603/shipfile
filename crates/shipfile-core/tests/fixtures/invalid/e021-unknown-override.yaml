@@ -1,0 +1,11 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+environments:
+  prod:
+    services:
+      apii: { scale: { replicas: 2 } }
+    databases:
+      main-db: { size: medium }

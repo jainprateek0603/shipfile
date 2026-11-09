@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e006-bad-version.yaml
+---
+[
+  {
+    "code": "E006",
+    "severity": "error",
+    "message": "`2` is not a valid value for `version`",
+    "file": "e006-bad-version.yaml",
+    "line": 1,
+    "column": 10,
+    "label": "must be `1`"
+  }
+]

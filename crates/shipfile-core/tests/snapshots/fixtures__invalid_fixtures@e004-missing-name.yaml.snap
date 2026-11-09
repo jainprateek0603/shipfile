@@ -1,0 +1,10 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e004-missing-name.yaml
+---
+error[E004]: missing required field `name` in the top level
+  ┌─ e004-missing-name.yaml:1:1
+  │
+1 │ version: 1
+  │ ^^^^^^^^ `name` is required here

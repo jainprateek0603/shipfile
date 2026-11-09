@@ -1,0 +1,19 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e003-unknown-field.yaml
+---
+[
+  {
+    "code": "E003",
+    "severity": "error",
+    "message": "unknown field `replcas` in `services.api.scale`",
+    "file": "e003-unknown-field.yaml",
+    "line": 6,
+    "column": 24,
+    "label": "not a known field",
+    "help": [
+      "did you mean `replicas`?"
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e021-unknown-override.yaml
+---
+error[E021]: environment `prod` overrides unknown services entry `apii`
+  ┌─ e021-unknown-override.yaml:9:7
+  │
+9 │       apii: { scale: { replicas: 2 } }
+  │       ^^^^ not defined under `services`
+  │
+  = help: did you mean `api`?
+
+error[E021]: environment `prod` overrides unknown databases entry `main-db`
+   ┌─ e021-unknown-override.yaml:11:7
+   │
+11 │       main-db: { size: medium }
+   │       ^^^^^^^ not defined under `databases`

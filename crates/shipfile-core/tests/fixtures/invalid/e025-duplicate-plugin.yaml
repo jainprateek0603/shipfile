@@ -1,0 +1,9 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+plugins:
+  - name: cost-tags
+  - name: cost-tags
+    options: { cost_centre: CC-1 }

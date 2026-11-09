@@ -1,0 +1,23 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e015-port-clash.yaml
+---
+error[E015]: port 3000 of `api` clashes with service `admin`
+  ┌─ e015-port-clash.yaml:6:11
+  │
+6 │     port: 3000
+  │           ^^^^ already taken locally
+  ·
+9 │     port: 3000
+  │           ---- first used here
+  │
+  = help: every service needs its own port locally; pick another one
+
+error[E015]: port 5432 of `db-proxy` clashes with the local Postgres container
+   ┌─ e015-port-clash.yaml:12:11
+   │
+12 │     port: 5432
+   │           ^^^^ already taken locally
+   │
+   = help: every service needs its own port locally; pick another one

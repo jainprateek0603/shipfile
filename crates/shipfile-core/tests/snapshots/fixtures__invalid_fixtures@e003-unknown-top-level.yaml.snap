@@ -1,0 +1,12 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e003-unknown-top-level.yaml
+---
+error[E003]: unknown field `service` in the top level
+  ┌─ e003-unknown-top-level.yaml:3:1
+  │
+3 │ service:
+  │ ^^^^^^^ not a known field
+  │
+  = help: did you mean `services`?

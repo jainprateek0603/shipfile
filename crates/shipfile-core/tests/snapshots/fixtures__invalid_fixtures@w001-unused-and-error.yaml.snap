@@ -1,0 +1,20 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/w001-unused-and-error.yaml
+---
+error[E017]: public service `api` has no `health` path
+  ┌─ w001-unused-and-error.yaml:6:5
+  │
+6 │     public: true
+  │     ^^^^^^ the load balancer needs a health check
+  │
+  = help: add `health: /healthz` (any path that answers 200 when the app is up)
+
+warning[W001]: `leftovers` is not used by any service
+  ┌─ w001-unused-and-error.yaml:9:3
+  │
+9 │   leftovers: {}
+  │   ^^^^^^^^^ unused
+  │
+  = help: add `leftovers` to a service's `uses`, or remove it

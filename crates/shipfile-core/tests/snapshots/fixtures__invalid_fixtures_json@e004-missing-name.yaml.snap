@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e004-missing-name.yaml
+---
+[
+  {
+    "code": "E004",
+    "severity": "error",
+    "message": "missing required field `name` in the top level",
+    "file": "e004-missing-name.yaml",
+    "line": 1,
+    "column": 1,
+    "label": "`name` is required here"
+  }
+]

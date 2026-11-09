@@ -1,0 +1,8 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    port: 3000
+    public: true
+    health: healthz

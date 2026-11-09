@@ -1,0 +1,31 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e015-port-clash.yaml
+---
+[
+  {
+    "code": "E015",
+    "severity": "error",
+    "message": "port 3000 of `api` clashes with service `admin`",
+    "file": "e015-port-clash.yaml",
+    "line": 6,
+    "column": 11,
+    "label": "already taken locally",
+    "help": [
+      "every service needs its own port locally; pick another one"
+    ]
+  },
+  {
+    "code": "E015",
+    "severity": "error",
+    "message": "port 5432 of `db-proxy` clashes with the local Postgres container",
+    "file": "e015-port-clash.yaml",
+    "line": 12,
+    "column": 11,
+    "label": "already taken locally",
+    "help": [
+      "every service needs its own port locally; pick another one"
+    ]
+  }
+]

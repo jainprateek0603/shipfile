@@ -1,0 +1,12 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e003-unknown-field.yaml
+---
+error[E003]: unknown field `replcas` in `services.api.scale`
+  ┌─ e003-unknown-field.yaml:6:24
+  │
+6 │     scale: { cpu: 256, replcas: 2 }
+  │                        ^^^^^^^ not a known field
+  │
+  = help: did you mean `replicas`?

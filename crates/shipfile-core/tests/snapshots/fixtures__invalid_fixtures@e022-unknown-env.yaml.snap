@@ -1,0 +1,13 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e022-unknown-env.yaml
+---
+error[E022]: environment `prd` is not declared
+  ┌─ e022-unknown-env.yaml:7:1
+  │
+7 │ environments:
+  │ ^^^^^^^^^^^^ declared environments are listed here
+  │
+  = help: did you mean `prod`?
+  = help: declared: dev, prod

@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e004-missing-build.yaml
+---
+[
+  {
+    "code": "E004",
+    "severity": "error",
+    "message": "missing required field `build` in `services.api`",
+    "file": "e004-missing-build.yaml",
+    "line": 4,
+    "column": 3,
+    "label": "`build` is required here"
+  }
+]

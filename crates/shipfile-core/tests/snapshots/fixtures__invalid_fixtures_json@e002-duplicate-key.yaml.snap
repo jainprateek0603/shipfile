@@ -1,0 +1,19 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e002-duplicate-key.yaml
+---
+[
+  {
+    "code": "E002",
+    "severity": "error",
+    "message": "duplicate key `port`",
+    "file": "e002-duplicate-key.yaml",
+    "line": 7,
+    "column": 5,
+    "label": "defined again here",
+    "help": [
+      "remove one of them; YAML keys must be unique"
+    ]
+  }
+]

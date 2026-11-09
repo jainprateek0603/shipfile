@@ -1,0 +1,12 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e018-health-path.yaml
+---
+error[E018]: `health` of `api` must start with `/`
+  ┌─ e018-health-path.yaml:8:13
+  │
+8 │     health: healthz
+  │             ^^^^^^^ not an absolute path
+  │
+  = help: try `/healthz`

@@ -326,7 +326,8 @@ fn services(spec: &Spec, loc: &Loc<'_>, out: &mut Vec<Diagnostic>) {
         }
 
         // Variable names and collisions with the env contract.
-        let mut taken: BTreeMap<String, String> = PLATFORM_VARS.iter().map(|v| ((*v).to_owned(), "the platform".to_owned())).collect();
+        let mut taken: BTreeMap<String, String> =
+            PLATFORM_VARS.iter().map(|v| ((*v).to_owned(), "the platform".to_owned())).collect();
         for r in &s.uses {
             if let Some(kind) = kind_of(spec, r) {
                 for v in resource_var_names(kind, r) {
@@ -338,7 +339,10 @@ fn services(spec: &Spec, loc: &Loc<'_>, out: &mut Vec<Diagnostic>) {
         for (i, key) in s.secrets.iter().enumerate() {
             let span = at(&["secrets", &i.to_string()], false);
             if !secrets_seen.insert(key) {
-                out.push(Diagnostic::new(Code::E014, format!("secret `{key}` is listed twice")).at(span, "listed again here"));
+                out.push(
+                    Diagnostic::new(Code::E014, format!("secret `{key}` is listed twice"))
+                        .at(span, "listed again here"),
+                );
                 continue;
             }
             var_name("secret", key, span, &taken, out);
@@ -361,8 +365,11 @@ fn var_name(
     let valid = key.bytes().next().is_some_and(|b| b.is_ascii_alphabetic() || b == b'_')
         && key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_');
     if !valid {
-        let fixed: String =
+        let mut fixed: String =
             key.chars().map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_uppercase() } else { '_' }).collect();
+        if fixed.starts_with(|c: char| c.is_ascii_digit()) {
+            fixed.insert(0, '_');
+        }
         out.push(
             Diagnostic::new(Code::E023, format!("`{key}` is not a valid {what} name"))
                 .at(span, "use letters, digits and `_`, not starting with a digit")
@@ -390,7 +397,12 @@ fn databases(spec: &Spec, map: &SourceMap, out: &mut Vec<Diagnostic>) {
                     );
                 }
                 if db.size.is_some() {
-                    out.push(engine_field("size", "dynamodb", map.key(&p("size")), "only Postgres databases have a size"));
+                    out.push(engine_field(
+                        "size",
+                        "dynamodb",
+                        map.key(&p("size")),
+                        "only Postgres databases have a size",
+                    ));
                 }
             }
             Engine::Postgres => {
@@ -419,9 +431,15 @@ fn environments(spec: &Spec, map: &SourceMap, env: Option<&str>, out: &mut Vec<D
             for name in names {
                 if !known.contains(&name.as_str()) {
                     out.push(
-                        Diagnostic::new(Code::E021, format!("environment `{e}` overrides unknown {section} entry `{name}`"))
-                            .at(map.key(&pointer(["environments", e, section, name])), format!("not defined under `{section}`"))
-                            .suggest(name, known.iter().copied()),
+                        Diagnostic::new(
+                            Code::E021,
+                            format!("environment `{e}` overrides unknown {section} entry `{name}`"),
+                        )
+                        .at(
+                            map.key(&pointer(["environments", e, section, name])),
+                            format!("not defined under `{section}`"),
+                        )
+                        .suggest(name, known.iter().copied()),
                     );
                 }
             }

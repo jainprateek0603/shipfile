@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e007-out-of-range.yaml
+---
+error[E007]: `services.api.port` is too large
+  ┌─ e007-out-of-range.yaml:6:11
+  │
+6 │     port: 70000
+  │           ^^^^^ must be at most 65535
+
+error[E007]: `services.api.scale.memory` is too small
+  ┌─ e007-out-of-range.yaml:7:22
+  │
+7 │     scale: { memory: 128 }
+  │                      ^^^ must be at least 512

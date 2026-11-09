@@ -1,0 +1,18 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e014-duplicate-entries.yaml
+---
+error[E014]: secret `STRIPE_KEY` is listed twice
+  ┌─ e014-duplicate-entries.yaml:6:27
+  │
+6 │     secrets: [STRIPE_KEY, STRIPE_KEY]
+  │                           ^^^^^^^^^^ listed again here
+
+error[E014]: `jobs` is listed twice in `uses`
+  ┌─ e014-duplicate-entries.yaml:7:18
+  │
+7 │     uses: [jobs, jobs]
+  │            ----  ^^^^ listed again here
+  │            │      
+  │            first listed here

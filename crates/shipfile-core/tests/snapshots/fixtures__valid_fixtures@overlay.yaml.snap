@@ -1,0 +1,341 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: out
+input_file: crates/shipfile-core/tests/fixtures/valid/overlay.yaml
+---
+== env: (none) ==
+shop
+├─ services
+│  └─ api  node22 · :8080 · private · 1×256cpu/512MiB
+│     └─ uses databases.carts
+└─ databases
+   └─ carts  dynamodb · key user_id/item_id
+{
+  "service": "api",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_DYNAMODB",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://dynamodb:8000"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "us-east-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "CARTS_TABLE",
+      "source": "databases.carts",
+      "local": {
+        "kind": "literal",
+        "value": "carts"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "databases.carts"
+      },
+      "secret": false
+    },
+    {
+      "name": "FEATURE_X",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "on"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "on"
+      },
+      "secret": false
+    },
+    {
+      "name": "LOG_LEVEL",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "debug"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "debug"
+      },
+      "secret": false
+    }
+  ],
+  "iam": [
+    {
+      "role": "task",
+      "resource": "databases.carts",
+      "actions": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+      ]
+    }
+  ],
+  "network": []
+}
+== env: dev ==
+shop (dev)
+├─ services
+│  └─ api  node22 · :8080 · private · 1×256cpu/512MiB
+│     └─ uses databases.carts
+└─ databases
+   └─ carts  dynamodb · key user_id/item_id
+{
+  "service": "api",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_DYNAMODB",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://dynamodb:8000"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "us-east-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "CARTS_TABLE",
+      "source": "databases.carts",
+      "local": {
+        "kind": "literal",
+        "value": "carts"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "databases.carts"
+      },
+      "secret": false
+    },
+    {
+      "name": "FEATURE_X",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "on"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "on"
+      },
+      "secret": false
+    },
+    {
+      "name": "LOG_LEVEL",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "debug"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "debug"
+      },
+      "secret": false
+    }
+  ],
+  "iam": [
+    {
+      "role": "task",
+      "resource": "databases.carts",
+      "actions": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+      ]
+    }
+  ],
+  "network": []
+}
+== env: prod ==
+shop (prod) · eu-west-1
+├─ services
+│  └─ api  node22 · :8080 · public · 3×512cpu/1024MiB
+│     └─ uses databases.carts
+└─ databases
+   └─ carts  dynamodb · key user_id/item_id
+{
+  "service": "api",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_DYNAMODB",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://dynamodb:8000"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "eu-west-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "CARTS_TABLE",
+      "source": "databases.carts",
+      "local": {
+        "kind": "literal",
+        "value": "carts"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "databases.carts"
+      },
+      "secret": false
+    },
+    {
+      "name": "FEATURE_X",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "on"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "on"
+      },
+      "secret": false
+    },
+    {
+      "name": "LOG_LEVEL",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "warn"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "warn"
+      },
+      "secret": false
+    }
+  ],
+  "iam": [
+    {
+      "role": "task",
+      "resource": "databases.carts",
+      "actions": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+      ]
+    }
+  ],
+  "network": []
+}

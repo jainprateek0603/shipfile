@@ -1,0 +1,9 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    public: true
+    port: 3000
+queues:
+  leftovers: {}

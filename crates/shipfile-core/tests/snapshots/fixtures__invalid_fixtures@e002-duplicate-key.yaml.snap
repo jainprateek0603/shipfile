@@ -1,0 +1,14 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e002-duplicate-key.yaml
+---
+error[E002]: duplicate key `port`
+  ┌─ e002-duplicate-key.yaml:7:5
+  │
+6 │     port: 3000
+  │     ---- first defined here
+7 │     port: 3001
+  │     ^^^^ defined again here
+  │
+  = help: remove one of them; YAML keys must be unique

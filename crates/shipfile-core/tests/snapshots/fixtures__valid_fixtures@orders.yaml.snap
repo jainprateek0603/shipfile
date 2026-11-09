@@ -1,0 +1,633 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: out
+input_file: crates/shipfile-core/tests/fixtures/valid/orders.yaml
+---
+== env: (none) ==
+orders · ap-south-1
+├─ services
+│  ├─ api  node22 · :3000 · public · 1×256cpu/512MiB
+│  │  ├─ uses databases.main-db
+│  │  ├─ uses queues.orders-queue
+│  │  └─ secret STRIPE_KEY
+│  └─ worker  python3.13 · private · 1×256cpu/512MiB
+│     ├─ uses queues.orders-queue
+│     └─ uses databases.sessions
+├─ queues
+│  └─ orders-queue  sqs · dlq after 5 receives
+└─ databases
+   ├─ main-db  postgres · small
+   └─ sessions  dynamodb · key id
+{
+  "service": "api",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_SQS",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "ap-south-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "LOG_LEVEL",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "info"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "info"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_HOST",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "postgres"
+      },
+      "aws": {
+        "kind": "get_att",
+        "resource": "databases.main-db",
+        "attribute": "Endpoint.Address"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_NAME",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "main_db"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "main_db"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_PASSWORD",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "shipfile"
+      },
+      "aws": {
+        "kind": "managed_secret",
+        "resource": "databases.main-db",
+        "json_key": "password"
+      },
+      "secret": true
+    },
+    {
+      "name": "MAIN_DB_PORT",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "5432"
+      },
+      "aws": {
+        "kind": "get_att",
+        "resource": "databases.main-db",
+        "attribute": "Endpoint.Port"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_USER",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "shipfile"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "shipfile"
+      },
+      "secret": false
+    },
+    {
+      "name": "ORDERS_QUEUE_URL",
+      "source": "queues.orders-queue",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324/000000000000/orders-queue"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "queues.orders-queue"
+      },
+      "secret": false
+    },
+    {
+      "name": "STRIPE_KEY",
+      "source": "secrets.STRIPE_KEY",
+      "local": {
+        "kind": "dot_env",
+        "key": "STRIPE_KEY"
+      },
+      "aws": {
+        "kind": "ssm",
+        "parameter": "/shipfile/orders/default/STRIPE_KEY"
+      },
+      "secret": true
+    }
+  ],
+  "iam": [
+    {
+      "role": "task",
+      "resource": "queues.orders-queue",
+      "actions": [
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage"
+      ]
+    },
+    {
+      "role": "execution",
+      "resource": "databases.main-db",
+      "actions": [
+        "secretsmanager:GetSecretValue"
+      ]
+    },
+    {
+      "role": "execution",
+      "resource": "secrets",
+      "actions": [
+        "ssm:GetParameters"
+      ]
+    }
+  ],
+  "network": [
+    "main-db"
+  ]
+}
+{
+  "service": "worker",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_DYNAMODB",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://dynamodb:8000"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_SQS",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "ap-south-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "ORDERS_QUEUE_URL",
+      "source": "queues.orders-queue",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324/000000000000/orders-queue"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "queues.orders-queue"
+      },
+      "secret": false
+    },
+    {
+      "name": "SESSIONS_TABLE",
+      "source": "databases.sessions",
+      "local": {
+        "kind": "literal",
+        "value": "sessions"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "databases.sessions"
+      },
+      "secret": false
+    }
+  ],
+  "iam": [
+    {
+      "role": "task",
+      "resource": "databases.sessions",
+      "actions": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+      ]
+    },
+    {
+      "role": "task",
+      "resource": "queues.orders-queue",
+      "actions": [
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage"
+      ]
+    }
+  ],
+  "network": []
+}
+== env: prod ==
+orders (prod) · ap-south-1
+├─ services
+│  ├─ api  node22 · :3000 · public · 2×256cpu/512MiB
+│  │  ├─ uses databases.main-db
+│  │  ├─ uses queues.orders-queue
+│  │  └─ secret STRIPE_KEY
+│  └─ worker  python3.13 · private · 1×256cpu/512MiB
+│     ├─ uses queues.orders-queue
+│     └─ uses databases.sessions
+├─ queues
+│  └─ orders-queue  sqs · dlq after 5 receives
+└─ databases
+   ├─ main-db  postgres · medium
+   └─ sessions  dynamodb · key id
+{
+  "service": "api",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_SQS",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "ap-south-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "LOG_LEVEL",
+      "source": "env",
+      "local": {
+        "kind": "literal",
+        "value": "info"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "info"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_HOST",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "postgres"
+      },
+      "aws": {
+        "kind": "get_att",
+        "resource": "databases.main-db",
+        "attribute": "Endpoint.Address"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_NAME",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "main_db"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "main_db"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_PASSWORD",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "shipfile"
+      },
+      "aws": {
+        "kind": "managed_secret",
+        "resource": "databases.main-db",
+        "json_key": "password"
+      },
+      "secret": true
+    },
+    {
+      "name": "MAIN_DB_PORT",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "5432"
+      },
+      "aws": {
+        "kind": "get_att",
+        "resource": "databases.main-db",
+        "attribute": "Endpoint.Port"
+      },
+      "secret": false
+    },
+    {
+      "name": "MAIN_DB_USER",
+      "source": "databases.main-db",
+      "local": {
+        "kind": "literal",
+        "value": "shipfile"
+      },
+      "aws": {
+        "kind": "literal",
+        "value": "shipfile"
+      },
+      "secret": false
+    },
+    {
+      "name": "ORDERS_QUEUE_URL",
+      "source": "queues.orders-queue",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324/000000000000/orders-queue"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "queues.orders-queue"
+      },
+      "secret": false
+    },
+    {
+      "name": "STRIPE_KEY",
+      "source": "secrets.STRIPE_KEY",
+      "local": {
+        "kind": "dot_env",
+        "key": "STRIPE_KEY"
+      },
+      "aws": {
+        "kind": "ssm",
+        "parameter": "/shipfile/orders/prod/STRIPE_KEY"
+      },
+      "secret": true
+    }
+  ],
+  "iam": [
+    {
+      "role": "task",
+      "resource": "queues.orders-queue",
+      "actions": [
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage"
+      ]
+    },
+    {
+      "role": "execution",
+      "resource": "databases.main-db",
+      "actions": [
+        "secretsmanager:GetSecretValue"
+      ]
+    },
+    {
+      "role": "execution",
+      "resource": "secrets",
+      "actions": [
+        "ssm:GetParameters"
+      ]
+    }
+  ],
+  "network": [
+    "main-db"
+  ]
+}
+{
+  "service": "worker",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_DYNAMODB",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://dynamodb:8000"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_SQS",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "ap-south-1"
+      },
+      "aws": {
+        "kind": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "source": "platform",
+      "local": {
+        "kind": "literal",
+        "value": "local"
+      },
+      "aws": null,
+      "secret": false
+    },
+    {
+      "name": "ORDERS_QUEUE_URL",
+      "source": "queues.orders-queue",
+      "local": {
+        "kind": "literal",
+        "value": "http://elasticmq:9324/000000000000/orders-queue"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "queues.orders-queue"
+      },
+      "secret": false
+    },
+    {
+      "name": "SESSIONS_TABLE",
+      "source": "databases.sessions",
+      "local": {
+        "kind": "literal",
+        "value": "sessions"
+      },
+      "aws": {
+        "kind": "ref",
+        "resource": "databases.sessions"
+      },
+      "secret": false
+    }
+  ],
+  "iam": [
+    {
+      "role": "task",
+      "resource": "databases.sessions",
+      "actions": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+      ]
+    },
+    {
+      "role": "task",
+      "resource": "queues.orders-queue",
+      "actions": [
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage"
+      ]
+    }
+  ],
+  "network": []
+}

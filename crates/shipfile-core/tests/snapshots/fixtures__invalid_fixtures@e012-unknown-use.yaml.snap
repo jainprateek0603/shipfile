@@ -1,0 +1,20 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e012-unknown-use.yaml
+---
+error[E012]: unknown resource `orders-qeue` in `uses`
+  ┌─ e012-unknown-use.yaml:6:12
+  │
+6 │     uses: [orders-qeue, main-db]
+  │            ^^^^^^^^^^^ not defined under `queues` or `databases`
+  │
+  = help: did you mean `orders-queue`?
+
+warning[W001]: `orders-queue` is not used by any service
+  ┌─ e012-unknown-use.yaml:8:3
+  │
+8 │   orders-queue: {}
+  │   ^^^^^^^^^^^^ unused
+  │
+  = help: add `orders-queue` to a service's `uses`, or remove it

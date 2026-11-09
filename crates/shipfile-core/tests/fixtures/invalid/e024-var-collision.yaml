@@ -1,0 +1,17 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    env:
+      ORDERS_QUEUE_URL: http://example.com
+      AWS_REGION: us-east-1
+    secrets: [API_TOKEN]
+    uses: [orders-queue]
+  worker:
+    build: ./worker
+    env: { API_TOKEN: x }
+    secrets: [API_TOKEN]
+    uses: [orders-queue]
+queues:
+  orders-queue: {}

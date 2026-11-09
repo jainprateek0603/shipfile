@@ -1,0 +1,9 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    secrets: [STRIPE_KEY, STRIPE_KEY]
+    uses: [jobs, jobs]
+queues:
+  jobs: {}

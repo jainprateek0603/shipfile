@@ -1,0 +1,19 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e019-dynamodb-key.yaml
+---
+[
+  {
+    "code": "E019",
+    "severity": "error",
+    "message": "DynamoDB table `sessions` has no `key`",
+    "file": "e019-dynamodb-key.yaml",
+    "line": 8,
+    "column": 3,
+    "label": "needs a partition key",
+    "help": [
+      "add `key: { partition: id }` (a sort key is optional)"
+    ]
+  }
+]

@@ -142,11 +142,8 @@ fn to_diagnostics(
             vec![d.help(format!("allowed values: {}", options.join(", ")))]
         }
         ValidationErrorKind::Constant { expected_value } => vec![
-            Diagnostic::new(
-                Code::E006,
-                format!("`{}` is not a valid value for `{field}`", scalar_text(instance)),
-            )
-            .at(map.nearest_value(ptr), format!("must be `{}`", scalar_text(expected_value))),
+            Diagnostic::new(Code::E006, format!("`{}` is not a valid value for `{field}`", scalar_text(instance)))
+                .at(map.nearest_value(ptr), format!("must be `{}`", scalar_text(expected_value))),
         ],
         ValidationErrorKind::Minimum { limit } | ValidationErrorKind::ExclusiveMinimum { limit } => vec![
             Diagnostic::new(Code::E007, format!("`{field}` is too small"))

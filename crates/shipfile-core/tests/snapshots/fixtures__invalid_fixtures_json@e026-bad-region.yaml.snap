@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e026-bad-region.yaml
+---
+[
+  {
+    "code": "E026",
+    "severity": "error",
+    "message": "`mumbai` is not an AWS region name",
+    "file": "e026-bad-region.yaml",
+    "line": 4,
+    "column": 11,
+    "label": "expected something like `ap-south-1`"
+  }
+]

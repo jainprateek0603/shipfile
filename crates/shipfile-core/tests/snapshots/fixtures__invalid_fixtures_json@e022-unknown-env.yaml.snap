@@ -1,0 +1,20 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e022-unknown-env.yaml
+---
+[
+  {
+    "code": "E022",
+    "severity": "error",
+    "message": "environment `prd` is not declared",
+    "file": "e022-unknown-env.yaml",
+    "line": 7,
+    "column": 1,
+    "label": "declared environments are listed here",
+    "help": [
+      "did you mean `prod`?",
+      "declared: dev, prod"
+    ]
+  }
+]

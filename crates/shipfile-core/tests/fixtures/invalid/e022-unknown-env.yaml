@@ -1,0 +1,9 @@
+# check-env: prd
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+environments:
+  dev: {}
+  prod: {}

@@ -1,0 +1,43 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e024-var-collision.yaml
+---
+[
+  {
+    "code": "E024",
+    "severity": "error",
+    "message": "environment variable `ORDERS_QUEUE_URL` is already set by `uses: orders-queue`",
+    "file": "e024-var-collision.yaml",
+    "line": 7,
+    "column": 7,
+    "label": "defined twice",
+    "help": [
+      "Shipfile sets this variable for you; remove it or pick another name"
+    ]
+  },
+  {
+    "code": "E024",
+    "severity": "error",
+    "message": "environment variable `AWS_REGION` is already set by the platform",
+    "file": "e024-var-collision.yaml",
+    "line": 8,
+    "column": 7,
+    "label": "defined twice",
+    "help": [
+      "Shipfile sets this variable for you; remove it or pick another name"
+    ]
+  },
+  {
+    "code": "E024",
+    "severity": "error",
+    "message": "environment variable `API_TOKEN` is already set by secret `API_TOKEN`",
+    "file": "e024-var-collision.yaml",
+    "line": 13,
+    "column": 12,
+    "label": "defined twice",
+    "help": [
+      "Shipfile sets this variable for you; remove it or pick another name"
+    ]
+  }
+]

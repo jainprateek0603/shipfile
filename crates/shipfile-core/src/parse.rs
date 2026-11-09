@@ -86,9 +86,7 @@ impl Node {
             Value::Float(f) => serde_json::Number::from_f64(*f).map_or(J::Null, J::Number),
             Value::Str(s) => J::String(s.clone()),
             Value::Seq(items) => J::Array(items.iter().map(Node::to_json).collect()),
-            Value::Map(entries) => {
-                J::Object(entries.iter().map(|e| (e.key.clone(), e.value.to_json())).collect())
-            }
+            Value::Map(entries) => J::Object(entries.iter().map(|e| (e.key.clone(), e.value.to_json())).collect()),
         }
     }
 

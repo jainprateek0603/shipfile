@@ -1,0 +1,6 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    scale: { cpu: 256, replcas: 2 }

@@ -301,7 +301,12 @@ pub fn dotted(pointer: &str) -> String {
     if pointer.is_empty() {
         return "the top level".to_owned();
     }
-    pointer.trim_start_matches('/').split('/').map(|s| s.replace("~1", "/").replace("~0", "~")).collect::<Vec<_>>().join(".")
+    pointer
+        .trim_start_matches('/')
+        .split('/')
+        .map(|s| s.replace("~1", "/").replace("~0", "~"))
+        .collect::<Vec<_>>()
+        .join(".")
 }
 
 // ---------------------------------------------------------------------------------------------

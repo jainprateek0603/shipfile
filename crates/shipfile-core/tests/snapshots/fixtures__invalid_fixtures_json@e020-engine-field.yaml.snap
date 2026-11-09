@@ -1,0 +1,31 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e020-engine-field.yaml
+---
+[
+  {
+    "code": "E020",
+    "severity": "error",
+    "message": "`key` does not apply to `postgres` databases",
+    "file": "e020-engine-field.yaml",
+    "line": 10,
+    "column": 5,
+    "label": "only DynamoDB tables have a key",
+    "help": [
+      "remove `key`"
+    ]
+  },
+  {
+    "code": "E020",
+    "severity": "error",
+    "message": "`size` does not apply to `dynamodb` databases",
+    "file": "e020-engine-field.yaml",
+    "line": 13,
+    "column": 5,
+    "label": "only Postgres databases have a size",
+    "help": [
+      "remove `size`"
+    ]
+  }
+]

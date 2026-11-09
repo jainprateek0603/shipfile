@@ -1,0 +1,12 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e013-uses-service.yaml
+---
+error[E013]: `worker` in `uses` is a service
+  ┌─ e013-uses-service.yaml:6:12
+  │
+6 │     uses: [worker]
+  │            ^^^^^^ services cannot be used like queues or databases
+  │
+  = help: to call another service, use its URL; only queues and databases go in `uses`

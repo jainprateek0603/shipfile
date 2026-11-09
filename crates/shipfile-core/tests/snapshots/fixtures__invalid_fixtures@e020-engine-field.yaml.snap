@@ -1,0 +1,20 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e020-engine-field.yaml
+---
+error[E020]: `key` does not apply to `postgres` databases
+   ┌─ e020-engine-field.yaml:10:5
+   │
+10 │     key: { partition: id }
+   │     ^^^ only DynamoDB tables have a key
+   │
+   = help: remove `key`
+
+error[E020]: `size` does not apply to `dynamodb` databases
+   ┌─ e020-engine-field.yaml:13:5
+   │
+13 │     size: medium
+   │     ^^^^ only Postgres databases have a size
+   │
+   = help: remove `size`

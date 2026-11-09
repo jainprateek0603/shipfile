@@ -1,0 +1,10 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e004-missing-build.yaml
+---
+error[E004]: missing required field `build` in `services.api`
+  ┌─ e004-missing-build.yaml:4:3
+  │
+4 │   api:
+  │   ^^^ `build` is required here

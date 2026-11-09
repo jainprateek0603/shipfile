@@ -1,0 +1,13 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e006-bad-engine.yaml
+---
+error[E006]: `postgress` is not a valid value for `databases.main-db.engine`
+  ┌─ e006-bad-engine.yaml:5:13
+  │
+5 │     engine: postgress
+  │             ^^^^^^^^^ not allowed here
+  │
+  = help: did you mean `postgres`?
+  = help: allowed values: postgres, dynamodb

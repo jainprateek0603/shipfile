@@ -1,0 +1,28 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e021-unknown-override.yaml
+---
+[
+  {
+    "code": "E021",
+    "severity": "error",
+    "message": "environment `prod` overrides unknown services entry `apii`",
+    "file": "e021-unknown-override.yaml",
+    "line": 9,
+    "column": 7,
+    "label": "not defined under `services`",
+    "help": [
+      "did you mean `api`?"
+    ]
+  },
+  {
+    "code": "E021",
+    "severity": "error",
+    "message": "environment `prod` overrides unknown databases entry `main-db`",
+    "file": "e021-unknown-override.yaml",
+    "line": 11,
+    "column": 7,
+    "label": "not defined under `databases`"
+  }
+]

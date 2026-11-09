@@ -1,0 +1,14 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    uses: [main-db, sessions]
+databases:
+  main-db:
+    engine: postgres
+    key: { partition: id }
+  sessions:
+    engine: dynamodb
+    size: medium
+    key: { partition: id }

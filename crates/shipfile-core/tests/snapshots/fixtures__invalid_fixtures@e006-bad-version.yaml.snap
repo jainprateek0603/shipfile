@@ -1,0 +1,10 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e006-bad-version.yaml
+---
+error[E006]: `2` is not a valid value for `version`
+  ┌─ e006-bad-version.yaml:1:10
+  │
+1 │ version: 2
+  │          ^ must be `1`

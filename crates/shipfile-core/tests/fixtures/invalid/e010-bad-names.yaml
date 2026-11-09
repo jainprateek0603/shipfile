@@ -1,0 +1,8 @@
+version: 1
+name: Orders_App
+services:
+  API:
+    build: ./api
+queues:
+  jobs--high:
+    dlq: { max_receives: 3 }

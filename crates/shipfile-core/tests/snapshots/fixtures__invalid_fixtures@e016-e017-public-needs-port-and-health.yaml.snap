@@ -1,0 +1,20 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e016-e017-public-needs-port-and-health.yaml
+---
+error[E016]: public service `api` has no `port`
+  ┌─ e016-e017-public-needs-port-and-health.yaml:6:5
+  │
+6 │     public: true
+  │     ^^^^^^ public services need a port for the load balancer
+  │
+  = help: add `port: <number>` (the port your app listens on)
+
+error[E017]: public service `api` has no `health` path
+  ┌─ e016-e017-public-needs-port-and-health.yaml:6:5
+  │
+6 │     public: true
+  │     ^^^^^^ the load balancer needs a health check
+  │
+  = help: add `health: /healthz` (any path that answers 200 when the app is up)

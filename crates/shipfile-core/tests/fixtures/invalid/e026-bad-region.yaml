@@ -1,0 +1,7 @@
+version: 1
+name: orders
+aws:
+  region: mumbai
+services:
+  api:
+    build: ./api

@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: json
+input_file: crates/shipfile-core/tests/fixtures/invalid/e001-bad-yaml.yaml
+---
+[
+  {
+    "code": "E001",
+    "severity": "error",
+    "message": "invalid YAML",
+    "file": "e001-bad-yaml.yaml",
+    "line": 6,
+    "column": 11,
+    "label": "unclosed bracket '[' at line 6, column 11"
+  }
+]

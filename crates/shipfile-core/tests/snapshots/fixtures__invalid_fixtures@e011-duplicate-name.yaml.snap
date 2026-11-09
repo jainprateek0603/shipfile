@@ -1,0 +1,15 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e011-duplicate-name.yaml
+---
+error[E011]: `orders` is defined under both `queues` and `databases`
+   ┌─ e011-duplicate-name.yaml:10:3
+   │
+ 8 │   orders: {}
+   │   ------ first definition
+ 9 │ databases:
+10 │   orders:
+   │   ^^^^^^ second definition
+   │
+   = help: names must be unique across services, queues and databases; rename one of them

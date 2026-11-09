@@ -1,0 +1,12 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/env-overlay-breaks-public.yaml
+---
+error[E017]: public service `api` has no `health` path
+   ┌─ env-overlay-breaks-public.yaml:10:14
+   │
+10 │       api: { public: true }
+   │              ^^^^^^ the load balancer needs a health check
+   │
+   = help: add `health: /healthz` (any path that answers 200 when the app is up)

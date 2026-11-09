@@ -1,0 +1,16 @@
+---
+source: crates/shipfile-core/tests/fixtures.rs
+expression: "render(&name, &source, &checked.diagnostics, false)"
+input_file: crates/shipfile-core/tests/fixtures/invalid/e005-wrong-type.yaml
+---
+error[E005]: `services.api.port` must be a whole number
+  ┌─ e005-wrong-type.yaml:6:11
+  │
+6 │     port: "three thousand"
+  │           ^^^^^^^^^^^^^^^^ this is a string
+
+error[E005]: `services.api.uses` must be a list
+  ┌─ e005-wrong-type.yaml:7:11
+  │
+7 │     uses: orders-queue
+  │           ^^^^^^^^^^^^ this is a string

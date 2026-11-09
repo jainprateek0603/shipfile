@@ -1,0 +1,7 @@
+version: 1
+name: orders
+services:
+  api:
+    build: ./api
+    port: "three thousand"
+    uses: orders-queue
