@@ -52,8 +52,8 @@ queues:
 ";
 
     fn project(spec: &str) -> TempDir {
-        let dir = TempDir::new().unwrap();
-        dir.child("shipfile.yaml").write_str(spec).unwrap();
+        let dir = TempDir::new().expect("temp dir");
+        dir.child("shipfile.yaml").write_str(spec).expect("write spec");
         dir
     }
 
