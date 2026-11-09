@@ -3,7 +3,7 @@
 > **One file in, a whole service out.**
 > Shipfile is a single-binary Rust CLI. It reads one `shipfile.yaml`, runs your stack on your machine with Docker, then deploys the same stack to AWS with a plan you review first. Along the way it generates the Dockerfiles, the CI pipeline and typed client bindings.
 
-Status: planning · Started: November 2026
+Status: phase 1 (spec & model) done · Started: November 2026
 
 ---
 
