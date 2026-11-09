@@ -13,7 +13,9 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+shipfile-core.workspace = true
 clap.workspace = true
+inquire.workspace = true
 miette.workspace = true
 owo-colors.workspace = true
 serde.workspace = true
@@ -22,3 +24,4 @@ serde_json.workspace = true
 [dev-dependencies]
 assert_cmd.workspace = true
 predicates.workspace = true
+assert_fs.workspace = true

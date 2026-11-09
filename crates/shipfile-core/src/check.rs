@@ -121,7 +121,8 @@ fn semantics(spec: &Spec, map: &SourceMap, env: Option<&str>) -> Vec<Diagnostic>
     out
 }
 
-fn dns_problem(name: &str) -> Option<&'static str> {
+/// Why `name` is not DNS-safe, if it is not.
+pub fn dns_problem(name: &str) -> Option<&'static str> {
     if name.is_empty() {
         Some("names cannot be empty")
     } else if name.len() > MAX_NAME_LEN {

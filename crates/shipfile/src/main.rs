@@ -2,19 +2,22 @@
 
 mod cli;
 mod doctor;
+mod init;
+mod spec_cmds;
 
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::process::ExitCode;
 
 use clap::Parser;
 use miette::{IntoDiagnostic, MietteHandlerOpts};
 
 use crate::cli::{Cli, Command};
+use crate::spec_cmds::Ui;
 
 /// Process exit codes; see `docs/PLAN.md` §4.2.
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
-enum Exit {
+pub(crate) enum Exit {
     Ok = 0,
     Error = 1,
     #[expect(dead_code, reason = "returned by `plan --detailed-exitcode` from phase 5")]
@@ -31,11 +34,18 @@ impl From<Exit> for ExitCode {
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    if cli.global.no_color {
+    let no_color = cli.global.no_color || std::env::var_os("NO_COLOR").is_some_and(|v| !v.is_empty());
+    if no_color {
         owo_colors::set_override(false);
         let _ = miette::set_hook(Box::new(|_| Box::new(MietteHandlerOpts::new().color(false).build())));
     }
-    match run(&cli) {
+    let ui = Ui {
+        json: cli.global.json,
+        quiet: cli.global.quiet,
+        verbose: cli.global.verbose,
+        color: !no_color && io::stderr().is_terminal(),
+    };
+    match run(&cli, ui) {
         Ok(exit) => exit.into(),
         Err(report) => {
             let _ = writeln!(io::stderr(), "{report:?}");
@@ -44,9 +54,13 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(cli: &Cli) -> miette::Result<Exit> {
+fn run(cli: &Cli, ui: Ui) -> miette::Result<Exit> {
     let mut stdout = io::stdout().lock();
-    match cli.command {
+    let mut stderr = io::stderr().lock();
+    match &cli.command {
+        Command::Init { yes } => init::run(&cli.global, *yes, ui, &mut stdout, &mut stderr),
+        Command::Check => spec_cmds::check(&cli.global, ui, &mut stdout, &mut stderr),
+        Command::Graph { format } => spec_cmds::graph(&cli.global, *format, ui, &mut stdout, &mut stderr),
         Command::Doctor => {
             let report = doctor::run();
             if cli.global.json {

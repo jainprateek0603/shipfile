@@ -26,6 +26,15 @@ jobs:
           components: rustfmt
       - run: cargo fmt --all --check
 
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: schema/shipfile.v1.json is up to date
+        run: cargo xtask schema --check
+
   test:
     name: test (${{ matrix.os }})
     strategy:
