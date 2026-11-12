@@ -1,0 +1,7 @@
+# crate-ci/typos config
+[default.extend-words]
+# Deliberate misspelling in the "did you mean" example in PLAN.md.
+qeue = "qeue"
+
+[files]
+extend-exclude = ["CHANGELOG.md", "*.snap"]
