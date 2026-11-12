@@ -1,0 +1,22 @@
+---
+source: crates/shipfile/src/doctor.rs
+expression: json
+---
+{
+  "checks": [
+    {
+      "detail": "not installed",
+      "fix": "install Docker Desktop (https://docs.docker.com/get-docker/) or Docker Engine",
+      "name": "docker",
+      "status": "fail"
+    },
+    {
+      "detail": "eu-west-1 (AWS_REGION)",
+      "name": "aws region",
+      "status": "ok"
+    }
+  ],
+  "ok": false,
+  "schema_version": 1,
+  "version": "[version]"
+}

@@ -538,6 +538,18 @@ login_session = arn:aws:iam::1:user/me
     }
 
     #[test]
+    fn json_shape_is_stable() {
+        // Golden test for docs/json-output.md: a change here is a `schema_version` question.
+        let report = Report::new(vec![
+            check_docker(&Probe::NotFound),
+            check_aws_region(&env_of(&[("AWS_REGION", "eu-west-1")]), None),
+        ]);
+        let mut json = serde_json::to_value(&report).unwrap();
+        json["version"] = "[version]".into();
+        insta::assert_json_snapshot!(json);
+    }
+
+    #[test]
     fn ascii_render() {
         let mut out = Vec::new();
         render(&Report::new(vec![check_docker(&Probe::NotFound)]), Marks::ASCII, &mut out).unwrap();

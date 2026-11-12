@@ -5,6 +5,33 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 
 **Priority:** `P0` fix now (a bug, or it blocks a later phase) · `P1` before `v0.1.0`/`v0.2.0` · `P2` before `v1.0.0` · `P3` nice to have / post-1.0.
 
+## Status (12 Nov 2026)
+
+`[x]` = done. Items needing commands that don't exist yet are **specified in [PLAN.md](PLAN.md)** (commands table §4.2, spec §5, AWS runtime §6.5, plugins §6.6, testing §7, timeline §8) and are built in the phase shown.
+
+| Item | State | Where / when |
+|---|---|---|
+| B1–B7 | done | `main.rs`, `doctor.rs`, `panic.rs` |
+| C1–C8 | done | `Cargo.toml`s, `ci.yml`, `deny.toml`, `dependabot.yml`, `release-plz.toml`, `dist-workspace.toml` |
+| C9 | partly | `cargo binstall` + `~/.local/bin` done; Homebrew, Scoop/winget, `msi` in Phase 8 |
+| C10 | partly | doc, coverage, nextest, machete in CI; `cargo-semver-checks` in Phase 7 (needs a published baseline) |
+| C11 | specced | Phase 1, with the parser |
+| C12 | specced | Phase 2, with `gen` |
+| P1 | decided | ADR-0007 (arm64 default); `doctor` checks buildx; built in Phases 3–6 |
+| P2, P3 | specced | `run`, `migrate`, `logs -e`, `shell`: Phases 3 and 6 |
+| P4, P5 | specced | `rollback` Phase 6; `health_cmd` Phase 3 |
+| P6 | specced | private isolated subnets: Phase 4 |
+| P7 | done | PLAN.md §9; shown in `plan` with the cost estimate |
+| P8, P9 | specced | dirty-tree guard Phase 6; security-changes section Phase 5 |
+| P10 | specced | PLAN §6.6 + ADR-0004; Phase 7 |
+| P11 | specced | `migrate-spec` when `version: 2` exists |
+| P12 | partly | completions done; `schema`, `explain` Phase 1; `.env.example` Phase 2; man pages Phase 8 |
+| P13 | done | `doctor` |
+| P14 | done | PLAN.md §12 (create the `post-1.0` label on GitHub) |
+| D1–D4 | done | `SECURITY.md`, `docs/json-output.md`, `docs/exit-codes.md`, README, `CONTRIBUTING.md` |
+
+**Needs you (GitHub settings):** turn on private vulnerability reporting; add a `RELEASE_PLZ_TOKEN` secret (fine-grained PAT, contents + pull-requests write); protect `main` so the CI checks are required; link the repo on Codecov.
+
 ---
 
 ## 1. Bugs in existing code
@@ -44,30 +71,30 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 - [x] **C1 · P0 · Internal crates could be published by accident**
   *Fix:* add `publish = false` to `shipfile-core`, `-cfn`, `-gen`, `-local`, `-aws`. Only `shipfile` and `shipfile-plugin` get published. Consider reserving the names on crates.io early.
 
-- [ ] **C2 · P1 · No dependency audit or licence checks**
+- [x] **C2 · P1 · No dependency audit or licence checks**
   *Fix:* add `deny.toml` (`cargo deny init`) covering advisories, licences (allow MIT/Apache-2.0/BSD/ISC/Unicode), bans for duplicates, and sources. Add a CI job using `EmbarkStudios/cargo-deny-action`.
 
-- [ ] **C3 · P1 · No automatic dependency updates**
+- [x] **C3 · P1 · No automatic dependency updates**
   *Fix:* add `.github/dependabot.yml` for `cargo` and `github-actions`, weekly, grouped minor/patch updates. Renovate also works.
 
 - [x] **C4 · P1 · Actions and toolchain aren't pinned**
   `ci.yml` uses `checkout@v4` while `release.yml` uses `@v6`, and the toolchain is `stable`, which moves.
   *Fix:* pin third-party actions to commit SHAs (Dependabot keeps them current). Set `channel = "1.xx.y"` in `rust-toolchain.toml` and bump it on purpose.
 
-- [ ] **C5 · P1 · Workflows aren't linted**
+- [x] **C5 · P1 · Workflows aren't linted**
   *Fix:* a CI job with `zizmor` (Actions security) and `actionlint`. Add `crate-ci/typos` for spelling.
 
-- [ ] **C6 · P1 · Releases can ship without passing CI**
+- [x] **C6 · P1 · Releases can ship without passing CI**
   *Fix:* protect `v*` tags with a repository ruleset, or have the release workflow check the commit's CI status. The simplest option is to release only from `main` once CI is green (release-plz does this, see C8).
 
-- [ ] **C7 · P1 · Missing release targets and provenance**
+- [x] **C7 · P1 · Missing release targets and provenance**
   *Fix:* in `dist-workspace.toml`:
   - add `x86_64-unknown-linux-musl` (Alpine, older glibc) and `aarch64-pc-windows-msvc`
   - set `github-attestations = true` for signed build provenance
 
   Then run `dist init` to regenerate `release.yml`.
 
-- [ ] **C8 · P1 · No CHANGELOG**
+- [x] **C8 · P1 · No CHANGELOG**
   `dist` uses one for release notes.
   *Fix:* use Conventional Commits, and adopt `release-plz` (PR with version bump + changelog) or `git-cliff`.
 
@@ -95,7 +122,7 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 
 ## 3. Product gaps
 
-- [ ] **P1 · P0 (decide before Phase 6) · CPU architecture mismatch**
+- [x] **P1 · P0 (decide before Phase 6) · CPU architecture mismatch**
   On an Apple Silicon Mac, Docker builds `arm64` images, but Fargate runs `X86_64` by default, so the task fails with "exec format error".
   *Fix:* choose one:
   - (a) always `docker build --platform linux/amd64`, which is slow on ARM because of emulation
@@ -123,7 +150,7 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 - [ ] **P6 · P1 · RDS sits in public subnets**
   *Fix:* add two private, isolated subnets (no route to the internet; free) and use them for the RDS subnet group. Services stay public; the security group rule from `uses` still applies.
 
-- [ ] **P7 · P1 · Cost notes miss public IPv4 charges**
+- [x] **P7 · P1 · Cost notes miss public IPv4 charges**
   Every Fargate task in a public subnet gets a public IPv4 address, and AWS charges about $3.60 a month for each.
   *Fix:* add this to PLAN.md §9 and show it in `plan` when the cost estimator lands. Option: ARM64 + fewer replicas in dev.
 
@@ -153,7 +180,7 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
   - `docker buildx` (see P1)
   - Session Manager plugin (see P3; warning only)
 
-- [ ] **P14 · P3 · Post-1.0 candidates (add to the `post-1.0` label)**
+- [x] **P14 · P3 · Post-1.0 candidates (add to the `post-1.0` label)**
   - S3 buckets (with `AWS_ENDPOINT_URL_S3` + MinIO locally)
   - scheduled jobs (EventBridge Scheduler → RunTask; locally a cron sidecar)
   - autoscaling on CPU or queue depth
@@ -163,17 +190,17 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 
 ## 4. Repo and docs
 
-- [ ] **D1 · P1 · No `SECURITY.md`**
+- [x] **D1 · P1 · No `SECURITY.md`**
   The tool handles AWS credentials, so a security contact belongs in the repo from the start. Don't wait for Phase 8.
   *Fix:* add `SECURITY.md` and turn on GitHub private vulnerability reporting. State which versions are supported.
 
-- [ ] **D2 · P2 · The machine-readable contract isn't documented**
+- [x] **D2 · P2 · The machine-readable contract isn't documented**
   *Fix:* `docs/json-output.md` listing every `--json` shape with `schema_version` (B5). `docs/exit-codes.md` with the table from PLAN.md §4.2, plus the usage-error code from B1. Golden-test the JSON shapes with `insta`.
 
-- [ ] **D3 · P2 · The privacy stance isn't stated**
+- [x] **D3 · P2 · The privacy stance isn't stated**
   *Fix:* a short README section: no telemetry; credentials are never stored, only read through the standard AWS chain; secrets are never printed.
 
-- [ ] **D4 · P3 · `CONTRIBUTING.md` and issue templates come earlier**
+- [x] **D4 · P3 · `CONTRIBUTING.md` and issue templates come earlier**
   Already in Phase 8. Optionally add a minimal `CONTRIBUTING.md` (build, test, commit style) as soon as C8 picks a commit convention.
 
 ---

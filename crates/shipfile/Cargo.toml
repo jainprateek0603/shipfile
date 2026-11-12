@@ -26,4 +26,17 @@ tracing-subscriber.workspace = true
 
 [dev-dependencies]
 assert_cmd.workspace = true
+insta.workspace = true
 predicates.workspace = true
+
+# `cargo binstall shipfile` downloads the dist release archive instead of building.
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/shipfile-{ target }{ archive-suffix }"
+bin-dir = "shipfile-{ target }/{ bin }{ binary-ext }"
+pkg-fmt = "txz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
+
+[package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
+pkg-fmt = "zip"

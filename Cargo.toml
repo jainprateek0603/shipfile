@@ -33,6 +33,7 @@ tracing-subscriber = { version = "0.3.23", default-features = false, features = 
 
 assert_cmd = "2.2.2"
 predicates = "3.1.4"
+insta = { version = "1.49.0", features = ["json"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
