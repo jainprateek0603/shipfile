@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/env-collision.yaml
+---
+error[E022]: `ORDERS_QUEUE_URL` is already set by `orders-queue`
+  ┌─ env-collision.yaml:10:7
+  │
+10│       ORDERS_QUEUE_URL: http://example.com
+  │       ^^^^^^^^^^^^^^^^ set again here
+  │
+  = help: rename this variable; shipfile sets it for you
+
+error: env-collision.yaml has 1 error

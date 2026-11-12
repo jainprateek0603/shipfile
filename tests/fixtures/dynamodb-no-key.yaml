@@ -1,0 +1,6 @@
+# E017: a DynamoDB table without a key
+version: 1
+name: shop
+databases:
+  sessions:
+    engine: dynamodb

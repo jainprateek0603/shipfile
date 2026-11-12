@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/bad-name.yaml
+---
+error[E010]: invalid database name `Main_DB`
+  ┌─ bad-name.yaml:5:3
+  │
+ 5│   Main_DB:
+  │   ^^^^^^^ contains `M`; only lowercase letters, digits and `-` are allowed
+  │
+  = help: names must be DNS-safe; try `main-db`
+
+error: bad-name.yaml has 1 error

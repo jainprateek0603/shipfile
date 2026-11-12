@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/overlay-unknown.yaml
+---
+error[E021]: environment `prod` overrides unknown service `apii`
+  ┌─ overlay-unknown.yaml:11:7
+  │
+11│       apii: { scale: { replicas: 2 } }
+  │       ^^^^ no service called `apii`
+  │
+  = help: did you mean `api`?
+
+error: overlay-unknown.yaml has 1 error

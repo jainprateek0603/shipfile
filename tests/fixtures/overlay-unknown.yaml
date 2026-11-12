@@ -1,0 +1,11 @@
+# E021: an environment overriding a service that doesn't exist
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+environments:
+  prod:
+    services:
+      apii: { scale: { replicas: 2 } }

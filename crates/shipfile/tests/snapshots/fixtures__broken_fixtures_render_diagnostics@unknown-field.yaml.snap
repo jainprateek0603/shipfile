@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/unknown-field.yaml
+---
+error[E003]: unknown field `prot` in `services.api`
+  ┌─ unknown-field.yaml:8:5
+  │
+ 8│     prot: 3000
+  │     ^^^^ not a known field
+  │
+  = help: did you mean `port`?
+
+error: unknown-field.yaml has 1 error

@@ -1,0 +1,11 @@
+# E012: `uses` naming a service
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    uses: [worker]
+  worker:
+    build: .
+    runtime: python3.13

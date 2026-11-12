@@ -1,0 +1,8 @@
+# E003: `health_cmd` misspelled
+version: 1
+name: shop
+services:
+  worker:
+    build: .
+    runtime: python3.13
+    healthcmd: ["python", "-m", "worker.health"]

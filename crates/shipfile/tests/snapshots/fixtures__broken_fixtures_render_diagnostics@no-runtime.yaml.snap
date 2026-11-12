@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/no-runtime.yaml
+---
+error[E030]: can't tell which runtime service `api` uses
+  ┌─ no-runtime.yaml:6:12
+  │
+ 6│     build: .
+  │            ^ no package.json, pyproject.toml, go.mod, Cargo.toml here
+  │
+  = help: set `runtime:` (for example `node22` or `python3.13`), or add a Dockerfile to the folder
+
+error: no-runtime.yaml has 1 error

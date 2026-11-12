@@ -1,0 +1,6 @@
+# E006: `amd64` is not an architecture name Shipfile uses
+version: 1
+name: shop
+aws:
+  region: ap-south-1
+  arch: amd64

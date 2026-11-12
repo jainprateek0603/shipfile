@@ -1,0 +1,8 @@
+# E004: a string where a number belongs
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    port: three-thousand

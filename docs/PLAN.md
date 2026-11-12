@@ -3,7 +3,7 @@
 > **One file in, a whole service out.**
 > Shipfile is a single-binary Rust CLI. It reads one `shipfile.yaml`, runs your stack on your machine with Docker, then deploys the same stack to AWS with a plan you review first. Along the way it generates the Dockerfiles, the CI pipeline and typed client bindings.
 
-Status: planning · Started: November 2026
+Status: Phases 0 and 1 done (12 Nov 2026) · Started: November 2026
 
 ---
 
@@ -72,20 +72,32 @@ shipfile apply -e prod # does that, and nothing else
 | `shipfile init [--yes]` | Finds service folders (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`), asks a few questions and writes a starter `shipfile.yaml` | 1 |
 | `shipfile check` | Validates the spec against the schema, then runs semantic checks. Errors point to the exact line. | 1 |
 | `shipfile graph [--format tree\|dot\|json]` | Prints the resource graph | 1 |
-| `shipfile gen [--check]` | Writes the Dockerfiles (only where missing), CI workflow, bindings, compose file and template. `--check` fails if any generated file is out of date, which is useful in CI. | 2–4 |
+| `shipfile schema` | Prints the spec's JSON Schema offline (generated with `schemars`) | 1 |
+| `shipfile explain <code>` | Long description of an error code such as `E012`, like `rustc --explain`. Texts live in `docs/errors/E012.md`, embedded with `include_str!`. | 1 |
+| `shipfile migrate-spec` | Rewrites an older `version:` of the spec to the current one, keeping comments (targeted text edits). Older versions fail `check` with an error naming this command. | when `version: 2` exists |
+| `shipfile gen [--check]` | Writes the Dockerfiles (only where missing), CI workflow, bindings, compose file, template and a `.env.example` listing every secret key (no values). `--check` fails if any generated file is out of date, which is useful in CI. | 2–4 |
 | `shipfile up [--detach]` / `down` / `logs [svc]` / `ps` | Runs the local stack | 3 |
-| `shipfile doctor` | Checks Docker, Compose, AWS credentials and region, and explains how to fix anything missing | 0 → grows |
+| `shipfile run <svc> [-e <env>] -- <cmd>` | One-off command with the service's image, env and bindings (migrations, scripts). Locally `docker compose run --rm`; on AWS an ECS `RunTask` with a command override that waits, streams logs and returns the command's exit code. | 3 (local), 6 (AWS) |
+| `shipfile doctor` | Checks Docker, Compose, buildx, git, local ports, disk space, AWS credentials and region, and the Session Manager plugin, and explains how to fix anything missing | 0 → grows |
+| `shipfile completions <shell>` | Prints a shell completion script | 0 |
 | `shipfile bootstrap [--github owner/repo]` | Run once per AWS account and region: creates the ECR repo and template bucket, plus the GitHub OIDC role if asked | 5 |
 | `shipfile plan -e <env> [--out plan.json] [--detailed-exitcode]` | Creates a change set and prints a readable diff grouped by spec resource | 5 |
 | `shipfile apply -e <env> [plan.json] [--yes] [--allow-data-loss]` | Builds and pushes images, runs the planned change set and streams events live | 6 |
 | `shipfile status -e <env>` | Shows stack state and outputs, such as the public URL | 6 |
+| `shipfile logs <svc> -e <env> [--follow] [--since 10m]` | CloudWatch Logs for a deployed service (`FilterLogEvents`, or `StartLiveTail` with `--follow`) | 6 |
+| `shipfile shell <svc> -e <env>` | Interactive shell in a running task through ECS Exec. Needs the Session Manager plugin (`doctor` warns if missing). | 6 |
+| `shipfile rollback -e <env>` | Re-applies the previous deployed image tags as a normal change set, so it shows as a plan first | 6 |
 | `shipfile destroy -e <env>` | Tears the environment down after you type the stack name to confirm | 6 |
 | `shipfile secret set <KEY> -e <env>` | Stores a secret in SSM. The value is read from a hidden prompt or stdin, never from a command-line argument. | 6 |
 | `shipfile plugins` | Lists the plugins found and the protocol version each speaks | 7 |
 
 **Global flags:** `-f/--file`, `-e/--env`, `--json` (machine-readable output on every reporting command), `--no-color` (also respects `NO_COLOR`), `-v/-q`.
 
-**Exit codes:** `0` OK · `1` error · `2` the plan has changes (only with `--detailed-exitcode`) · `3` blocked by a safety guard.
+`--ascii` uses ASCII status marks; it is automatic on consoles without Unicode and with `TERM=dumb`. Logging: `-v` debug, `-vv` trace, `-q` errors only, `SHIPFILE_LOG` filter; logs go to stderr.
+
+**Exit codes:** `0` OK · `1` error, including usage errors · `2` the plan has changes (only with `--detailed-exitcode`) · `3` blocked by a safety guard. See [exit-codes.md](exit-codes.md).
+
+**JSON:** every `--json` document carries `schema_version`, raised only on breaking changes. See [json-output.md](json-output.md).
 
 ### 4.3 Output rules
 - Progress and spinners go to **stderr** and results go to **stdout**, so piping `--json` always works.
@@ -135,6 +147,7 @@ version: 1
 name: orders
 aws:
   region: ap-south-1
+  arch: arm64               # arm64 (default, Graviton) | x86_64; see ADR-0007
 
 services:
   api:
@@ -147,12 +160,14 @@ services:
     env:
       LOG_LEVEL: info
     secrets: [STRIPE_KEY]
+    migrate: ["npm", "run", "migrate"]   # optional; `apply` runs it as a one-off task before the service updates
     uses: [orders-queue, main-db]
 
   worker:
     build: ./worker
     runtime: python3.13
     command: ["python", "-m", "worker"]
+    health_cmd: ["python", "-m", "worker.health"]   # optional; container HealthCheck locally and on AWS
     uses: [orders-queue]
 
 queues:
@@ -303,6 +318,8 @@ pub struct GenOutput {
 3. It waits for health checks, then creates the DynamoDB Local tables through the AWS SDK pointed at `localhost:8000`.
 4. It prints a summary: service URLs, the database connection string and how to send a test message.
 
+Images are built for the same `aws.arch` as on AWS (`docker buildx build --platform linux/<arch>`), so what runs locally is what runs on Fargate.
+
 ### 6.5 AWS runtime
 
 **Bootstrap stack** (`shipfile-bootstrap`, once per account and region): an ECR repository, an S3 bucket for templates with a 30-day lifecycle rule, and, optionally, a GitHub OIDC provider plus a deploy role limited to one repository.
@@ -311,11 +328,11 @@ pub struct GenOutput {
 
 | Spec | CloudFormation resources |
 |---|---|
-| (always) | VPC, 2 public subnets in 2 availability zones, internet gateway, routes. **No NAT gateway.** An ECS cluster. |
-| service | Fargate TaskDefinition, Service with the **deployment circuit breaker and rollback**, LogGroup (7-day retention), task role (least privilege from `uses`), execution role (ECR, logs, its own secrets only), security group |
+| (always) | VPC, 2 public subnets and 2 **private isolated** subnets (no route to the internet; free) in 2 availability zones, internet gateway, routes. **No NAT gateway.** An ECS cluster. |
+| service | Fargate TaskDefinition with `RuntimePlatform.CpuArchitecture` from `aws.arch` (ADR-0007), Service with the **deployment circuit breaker and rollback** and `EnableExecuteCommand` (for `shell`), LogGroup (7-day retention), task role (least privilege from `uses`, plus the SSM messages actions ECS Exec needs), execution role (ECR, logs, its own secrets only), security group. `health_cmd` maps to the container `HealthCheck`. |
 | `public: true` | ALB, HTTP listener, target group using the `health` path, ALB security group |
 | queue | SQS Queue + DLQ with a redrive policy |
-| postgres | RDS `db.t4g.micro` / `db.t4g.small`, `ManageMasterUserPassword`, subnet group, security group open only to the services that use it, `DeletionPolicy: Snapshot` |
+| postgres | RDS `db.t4g.micro` / `db.t4g.small` in the **private isolated subnets**, `ManageMasterUserPassword`, subnet group, security group open only to the services that use it, `DeletionPolicy: Snapshot` |
 | dynamodb | Table in `PAY_PER_REQUEST` mode, `DeletionPolicy: Retain` in `prod` |
 
 **Rules that keep plans safe:**
@@ -323,9 +340,13 @@ pub struct GenOutput {
 - **Always upload the template to S3** and use `TemplateURL`, so the 51,200-byte inline limit never matters.
 - **Plan file** (`plan.json`): the change set ARN, stack, a hash of the template and a hash of the spec. `apply` refuses a plan that's stale (the spec changed) or no longer `AVAILABLE`.
 - **Safety guard:** `Remove`, or a `Replacement` of `True` or `Conditional`, on RDS, DynamoDB or SQS needs `--allow-data-loss`. The exit code is `3`.
+- **Security changes are called out.** The plan has a "Security changes" section listing IAM statement and security group ingress changes (like `cdk diff`), and warns on wildcards: `*` actions or resources, and `0.0.0.0/0` on anything but the ALB. Plugins can patch the template, so this is where their effect shows.
+- **Clean tree.** `apply` warns when `git status --porcelain` isn't empty, and refuses for environments marked `protect: true` (the default for `prod`) unless `--allow-dirty` is passed. Stacks are tagged with the git SHA.
+- **Migrations.** If a service has `migrate`, `apply` registers the new task definition, runs it once as a `RunTask` with the `migrate` command, and updates the service only if it exits `0`.
+- **Rollback.** The last 5 deployed image tags per service are kept in an SSM parameter (`/shipfile/<app>/<env>/history`). `rollback` builds a template with the previous tags and goes through the normal plan.
 - **Readable failures:** when a deploy fails, Shipfile shows the **first** failed event (the root cause), not the cascade of rollback errors that follows it.
 
-**Images:** `docker build`, an ECR login through `GetAuthorizationToken` piped to `docker login --password-stdin`, then a push tagged with `<app>-<service>-<content hash>`. Unchanged code means an unchanged tag, which means no new task revision.
+**Images:** `docker build`, an ECR login through `GetAuthorizationToken` piped to `docker login --password-stdin`, then a push tagged with `<app>-<service>-<content hash>`, plus a second tag with the git SHA for traceability. Unchanged code means an unchanged tag, which means no new task revision.
 
 ### 6.6 Plugin protocol (v1)
 
@@ -341,6 +362,7 @@ pub struct GenOutput {
 - Plugins are found as `shipfile-gen-<name>` on `PATH` or through a `path:` in the spec. They run **only if listed in the spec**.
 - **Sandboxing:** a 30-second timeout. Paths must be relative and stay inside the project (no `..`, no absolute paths, no symlinks pointing out). stderr is streamed as plugin logs.
 - The plan lists every plugin that patched the template, so nothing changes without showing up there.
+- **No inherited secrets:** the plugin process starts with `env_clear()` and gets back only `PATH`, `HOME`/`USERPROFILE`, `SYSTEMROOT`, `TEMP`/`TMP`, `LANG` and `SHIPFILE_*`. AWS credentials never reach a plugin; everything it needs is on stdin.
 
 ### 6.7 Main crates
 
@@ -356,7 +378,8 @@ pub struct GenOutput {
 | Terminal | `owo-colors`, `indicatif`, `inquire` (prompts) |
 | Errors | `thiserror` (libraries), `miette` at the edge (binary) |
 | Testing | `insta` (golden), `assert_cmd` + `assert_fs` (CLI), `proptest` (env overlay merge) |
-| Release | `cargo-dist`: GitHub Releases, shell/PowerShell installers, Homebrew tap |
+| Logging | `tracing` + `tracing-subscriber` (stderr, `SHIPFILE_LOG`) |
+| Release | `cargo-dist`: GitHub Releases (with build attestations), shell/PowerShell installers, `cargo binstall`, Homebrew tap; `release-plz` for version bumps and the CHANGELOG |
 
 ---
 
@@ -371,6 +394,9 @@ pub struct GenOutput {
 | Template lint | Every golden template passes `cfn-lint` | CI step | Python in CI |
 | Local end-to-end | `up` → `curl /healthz` → send a message → worker consumes it → `down` | `cargo xtask e2e local` | Docker (Linux CI runner) |
 | AWS end-to-end | `bootstrap` → `apply` → `curl` the URL → `destroy` | `cargo xtask e2e aws` | sandbox account; run manually or weekly |
+| Fuzz | `parse` and `parse+validate` never panic, only return diagnostics | `cargo-fuzz` in `fuzz/`, a few minutes in a weekly CI job | nightly toolchain |
+| Determinism | `gen` output is byte-identical across Linux, macOS and Windows, and across two runs | CI: each OS uploads its output, one job diffs them | nothing |
+| JSON shapes | Every `--json` document matches `docs/json-output.md` | `insta` snapshots | nothing |
 
 The CI matrix runs on **Linux, macOS and Windows** (`fmt`, `clippy -D warnings`, tests). Generated files always use `/` paths and LF line endings, whatever the OS.
 
@@ -383,15 +409,15 @@ About **10 hours a week**, starting **Monday 9 November 2026**. Each phase ends 
 | # | Phase | Dates | Work | Done when |
 |---|---|---|---|---|
 | 0 | Foundations | 9 – 15 Nov | Repo, workspace, lints, 3-OS CI, `cargo-dist`, `--version`, `doctor` skeleton, ADRs | `v0.0.1` installs from a GitHub release on Windows |
-| 1 | Spec & model | 16 – 29 Nov | Spec types, positioned parsing, schema generation, defaults, env overlay, semantic checks with suggestions, `Model` + `EnvContract`; `init`, `check`, `graph` | 15+ broken fixture specs give the expected diagnostics; schema committed |
-| 2 | File generators | 30 Nov – 13 Dec | Dockerfile templates (Node/Python/Go/Rust; multi-stage, non-root), TS bindings, CI workflow (check + gen only), `gen`, `gen --check` | `examples/orders` gets every file; golden tests green |
-| 3 | Local runtime | 14 – 27 Dec | Compose generator, ElasticMQ config, DynamoDB Local setup, `up/down/logs/ps`, health wait | Example stack runs locally: API answers and the worker consumes a queued message. **Release `v0.1.0`** + VHS demo GIF |
+| 1 | Spec & model | 16 – 29 Nov | Spec types, positioned parsing, schema generation, defaults, env overlay, semantic checks with suggestions, `Model` + `EnvContract`; `init`, `check`, `graph`, `schema`, `explain`; fuzz targets for the parser | 15+ broken fixture specs give the expected diagnostics; schema committed |
+| 2 | File generators | 30 Nov – 13 Dec | Dockerfile templates (Node/Python/Go/Rust; multi-stage, non-root), TS bindings, CI workflow (check + gen only), `.env.example`, `gen`, `gen --check`; cross-OS determinism job | `examples/orders` gets every file; golden tests green |
+| 3 | Local runtime | 14 – 27 Dec | Compose generator, ElasticMQ config, DynamoDB Local setup, `up/down/logs/ps`, local `run`, `health_cmd`, health wait | Example stack runs locally: API answers and the worker consumes a queued message. **Release `v0.1.0`** + VHS demo GIF |
 | (buffer) | Catch-up | 28 Dec – 3 Jan | Slack for exams, holidays or overruns | n/a |
-| 4 | CloudFormation | 4 – 17 Jan | `shipfile-cfn` types, builders for network/ECS/ALB/SQS/RDS/DynamoDB/IAM, stable IDs, source metadata, `cfn-lint` in CI | Golden templates pass `cfn-lint` |
-| 5 | Plan | 18 – 31 Jan | `bootstrap`, STS identity, change sets (with property values), grouped diff renderer, safety guard, plan file, exit codes, `--json` | A sandbox account shows a correct add/modify/replace diff; guard blocks a database replace |
-| 6 | Apply | 1 – 14 Feb | Image build + ECR push, execute change set, live events, root-cause failures, `status`, `destroy`, `secret set` | Empty account → live URL with `bootstrap` + `apply`; `destroy` leaves nothing behind. **Release `v0.2.0`** |
-| 7 | CI & plugins | 15 – 28 Feb | Full workflow (PR plan comment, OIDC through `bootstrap --github`, apply on merge), plugin crate + runner + sandboxing, `cost-tags` (Rust) and `bindings-python` (Python) | A PR in the example repo gets a plan comment; the Python plugin works end to end |
-| 8 | Polish & launch | 1 – 14 Mar | mdBook docs on GitHub Pages, README with GIF, CONTRIBUTING, issue templates, "good first issue" labels, Homebrew tap, schema hosting, portfolio update | Someone new deploys the example in under 10 minutes. **Release `v1.0.0`** |
+| 4 | CloudFormation | 4 – 17 Jan | `shipfile-cfn` types, builders for network (incl. private isolated subnets)/ECS (`RuntimePlatform`, ECS Exec)/ALB/SQS/RDS/DynamoDB/IAM, stable IDs, source metadata, `cfn-lint` in CI | Golden templates pass `cfn-lint` |
+| 5 | Plan | 18 – 31 Jan | `bootstrap`, STS identity (`doctor` verifies credentials), change sets (with property values), grouped diff renderer with a security-changes section, safety guard, plan file, exit codes, `--json` | A sandbox account shows a correct add/modify/replace diff; guard blocks a database replace |
+| 6 | Apply | 1 – 14 Feb | Image build (`--platform`) + ECR push, dirty-tree guard, `migrate`, execute change set, live events, root-cause failures, `status`, `destroy`, `secret set`, `run`/`logs`/`shell` on AWS, `rollback` | Empty account → live URL with `bootstrap` + `apply`; `destroy` leaves nothing behind. **Release `v0.2.0`** |
+| 7 | CI & plugins | 15 – 28 Feb | Full workflow (PR plan comment, OIDC through `bootstrap --github`, apply on merge), plugin crate + runner + sandboxing (`env_clear`), `cargo-semver-checks` on `shipfile-plugin`, `cost-tags` (Rust) and `bindings-python` (Python) | A PR in the example repo gets a plan comment; the Python plugin works end to end |
+| 8 | Polish & launch | 1 – 14 Mar | mdBook docs on GitHub Pages, README with GIF, issue templates, "good first issue" labels, Homebrew tap, Scoop/winget (`msi` installer), man pages (`clap_mangen` via `xtask`), schema hosting, portfolio update | Someone new deploys the example in under 10 minutes. **Release `v1.0.0`** |
 
 **Milestones:** `v0.1.0` local (27 Dec) → `v0.2.0` AWS (14 Feb) → `v1.0.0` launch (14 Mar 2027).
 
@@ -403,6 +429,7 @@ If time gets tight, cut in this order: `bindings-python` plugin → `graph --for
 
 - Set an **AWS Budget alert at $5–10** before your first `apply`.
 - No NAT gateway (about $32 a month each). Tasks run in public subnets with locked-down security groups.
+- **Public IPv4 addresses cost about $3.60 a month each.** Every Fargate task in a public subnet gets one, and so does the ALB (one per AZ). For dev: `replicas: 1`, ARM64 (the default) and `destroy` when idle. `plan` shows this once the cost estimate lands.
 - The **ALB costs about $16+ a month** even when idle, and RDS bills by the hour. `destroy` demo stacks right after recording. Use DynamoDB for quick demos, because RDS takes 10–15 minutes to create.
 - Shipfile never stores AWS keys. It uses the standard credential chain, and CI signs in through GitHub OIDC only.
 
@@ -440,4 +467,5 @@ In the project entry in `src/content/site.ts`:
 - HTTPS and custom domains (ACM + Route 53): the first post-1.0 feature
 - A rough monthly cost estimate in `plan`
 - `shipfile eject --cdk`, which writes equivalent CDK TypeScript
+- Post-1.0 candidates (`post-1.0` label): S3 buckets (`AWS_ENDPOINT_URL_S3` + MinIO locally); scheduled jobs (EventBridge Scheduler → RunTask, a cron sidecar locally); autoscaling on CPU or queue depth
 - A trademark and domain check for "Shipfile" before launch (`shipfile.dev` is used above as a placeholder)

@@ -1,0 +1,13 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/wrong-type.yaml
+---
+error[E004]: `services.api.port` must be a whole number, found a string
+  ┌─ wrong-type.yaml:8:11
+  │
+ 8│     port: three-thousand
+  │           ^^^^^^^^^^^^^^ expected a whole number
+  │
+
+error: wrong-type.yaml has 1 error

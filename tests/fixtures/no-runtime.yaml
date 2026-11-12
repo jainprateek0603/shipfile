@@ -1,0 +1,6 @@
+# E030: no runtime given and none detectable
+version: 1
+name: shop
+services:
+  api:
+    build: .

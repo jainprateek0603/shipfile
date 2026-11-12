@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/duplicate-name.yaml
+---
+error[E011]: the name `jobs` is used twice
+  ┌─ duplicate-name.yaml:9:3
+  │
+ 9│   jobs:
+  │   ^^^^ already used by a service
+  │
+  = help: services, queues and databases share one set of names; rename one of them
+
+error: duplicate-name.yaml has 1 error

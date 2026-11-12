@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/duplicate-key.yaml
+---
+error[E002]: duplicate key `port`
+  ┌─ duplicate-key.yaml:9:5
+  │
+ 9│     port: 3001
+  │     ^^^^ defined again here
+  │
+  = help: `port` is first defined on line 8; remove one of them
+
+error: duplicate-key.yaml has 1 error

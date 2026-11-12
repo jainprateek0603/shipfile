@@ -1,0 +1,44 @@
+# release-plz (a job in ci.yml) opens a "release" PR from green `main` (version bump + CHANGELOG from
+# Conventional Commits). Merging it tags `vX.Y.Z`, which starts dist's release.yml.
+[workspace]
+changelog_config = "cliff.toml"
+git_release_enable = false # dist creates the GitHub release
+git_tag_name = "v{{ version }}"
+publish = false # crates.io publishing is turned on at v0.1.0
+semver_check = false
+
+[[package]]
+name = "shipfile"
+changelog_path = "CHANGELOG.md"
+changelog_include = ["shipfile-core", "shipfile-cfn", "shipfile-gen", "shipfile-local", "shipfile-aws", "shipfile-plugin"]
+git_tag_enable = true
+
+[[package]]
+name = "shipfile-plugin"
+changelog_update = false
+git_tag_enable = false
+
+[[package]]
+name = "shipfile-core"
+changelog_update = false
+git_tag_enable = false
+
+[[package]]
+name = "shipfile-cfn"
+changelog_update = false
+git_tag_enable = false
+
+[[package]]
+name = "shipfile-gen"
+changelog_update = false
+git_tag_enable = false
+
+[[package]]
+name = "shipfile-local"
+changelog_update = false
+git_tag_enable = false
+
+[[package]]
+name = "shipfile-aws"
+changelog_update = false
+git_tag_enable = false

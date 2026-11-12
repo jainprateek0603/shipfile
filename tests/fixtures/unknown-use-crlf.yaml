@@ -1,0 +1,13 @@
+# E012: the same as unknown-use.yaml, saved with CRLF line endings
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    uses: [orders-qeue, main-db]
+queues:
+  orders-queue:
+databases:
+  main-db:
+    engine: postgres

@@ -1,12 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["crates/*"]
+members = ["crates/*", "xtask"]
+exclude = ["fuzz"]
 default-members = ["crates/shipfile"]
 
 [workspace.package]
 version = "0.0.1"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.89"
 license = "MIT OR Apache-2.0"
 authors = ["Prateek Jain <jainprateek.0603@gmail.com>"]
 repository = "https://github.com/jainprateek0603/shipfile"
@@ -25,9 +26,23 @@ miette = { version = "7.6.0", features = ["fancy"] }
 owo-colors = { version = "4.4.0", features = ["supports-colors"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
+clap_complete = "4.6.11"
+fs4 = "1.1.0"
+supports-unicode = "3.0.0"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["env-filter", "fmt", "ansi", "std"] }
+serde-saphyr = { version = "2.1.1", default-features = false, features = ["deserialize"] }
+schemars = "1.2.3"
+jsonschema = { version = "0.60.2", default-features = false }
+strsim = "0.11.1"
+thiserror = "2.0.21"
+inquire = "0.9.4"
 
 assert_cmd = "2.2.2"
 predicates = "3.1.4"
+assert_fs = "1.1.4"
+insta = { version = "1.49.0", features = ["glob", "json"] }
+proptest = "1.12.0"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

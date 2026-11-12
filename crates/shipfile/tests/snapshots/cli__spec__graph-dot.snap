@@ -1,0 +1,16 @@
+---
+source: crates/shipfile/tests/cli.rs
+expression: "stdout_of(&[\"graph\", \"--format\", \"dot\"])"
+---
+digraph "orders" {
+  rankdir=LR;
+  node [fontname="Helvetica"];
+  "services.api" [label="api", shape=doubleoctagon];
+  "services.worker" [label="worker", shape=box];
+  "queues.orders-queue" [label="orders-queue", shape=cds];
+  "databases.main-db" [label="main-db\npostgres", shape=cylinder];
+  "databases.sessions" [label="sessions\ndynamodb", shape=cylinder];
+  "services.api" -> "databases.main-db";
+  "services.api" -> "queues.orders-queue";
+  "services.worker" -> "queues.orders-queue";
+}

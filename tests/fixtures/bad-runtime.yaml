@@ -1,0 +1,7 @@
+# E006: a runtime in the wrong format
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: ruby3
