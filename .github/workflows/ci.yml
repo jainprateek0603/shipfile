@@ -170,15 +170,29 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      # Without the token there is nothing to do yet: skip with a notice, don't fail main.
+      - name: Check for RELEASE_PLZ_TOKEN
+        id: token
+        env:
+          TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::RELEASE_PLZ_TOKEN is not set; skipping release-plz. See docs/IMPROVEMENTS.md."
+          fi
+      - if: steps.token.outputs.present == 'true'
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+      - if: steps.token.outputs.present == 'true'
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
           toolchain: 1.99.1
       # Tags pushed with GITHUB_TOKEN don't start other workflows, so release.yml
       # needs a token (fine-grained PAT or app) with contents + pull-requests write.
-      - uses: release-plz/action@66b324fd6c72d05d2a08568492ecdd62bfb8a62b # v0.5.148
+      - if: steps.token.outputs.present == 'true'
+        uses: release-plz/action@66b324fd6c72d05d2a08568492ecdd62bfb8a62b # v0.5.148
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
