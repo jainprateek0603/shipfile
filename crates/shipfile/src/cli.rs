@@ -21,12 +21,12 @@ pub(crate) struct Cli {
 pub(crate) struct GlobalArgs {
     /// Path to the spec file.
     #[arg(short = 'f', long = "file", global = true, default_value = "shipfile.yaml")]
-    #[expect(dead_code, reason = "read by spec commands from phase 1")]
+    #[allow(dead_code, reason = "read by spec commands from phase 1; `expect` breaks on the MSRV, which does not flag it")]
     pub(crate) file: PathBuf,
 
     /// Environment overlay to apply (for example `dev` or `prod`).
     #[arg(short = 'e', long = "env", global = true, env = "SHIPFILE_ENV")]
-    #[expect(dead_code, reason = "read by spec commands from phase 1")]
+    #[allow(dead_code, reason = "read by spec commands from phase 1; `expect` breaks on the MSRV, which does not flag it")]
     pub(crate) env: Option<String>,
 
     /// Print machine-readable JSON on stdout.
