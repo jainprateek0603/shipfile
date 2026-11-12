@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 /// One file in, a whole service out.
 ///
@@ -21,12 +21,10 @@ pub(crate) struct Cli {
 pub(crate) struct GlobalArgs {
     /// Path to the spec file.
     #[arg(short = 'f', long = "file", global = true, default_value = "shipfile.yaml")]
-    #[allow(dead_code, reason = "read from phase 1; not `expect`: 1.88 misses it")]
     pub(crate) file: PathBuf,
 
     /// Environment overlay to apply (for example `dev` or `prod`).
     #[arg(short = 'e', long = "env", global = true, env = "SHIPFILE_ENV")]
-    #[allow(dead_code, reason = "read from phase 1; not `expect`: 1.88 misses it")]
     pub(crate) env: Option<String>,
 
     /// Print machine-readable JSON on stdout.
@@ -52,6 +50,20 @@ pub(crate) struct GlobalArgs {
 
 #[derive(Debug, Subcommand)]
 pub(crate) enum Command {
+    /// Find service folders and write a starter shipfile.yaml.
+    Init {
+        /// Accept the detected defaults without asking (also when stdin is not a terminal).
+        #[arg(short, long)]
+        yes: bool,
+    },
+    /// Validate the spec: schema first, then semantic checks. Errors point to the exact line.
+    Check,
+    /// Print the resource graph.
+    Graph {
+        /// Output format. `--json` is the same as `--format json`.
+        #[arg(long, value_enum, default_value_t = GraphFormat::Tree)]
+        format: GraphFormat,
+    },
     /// Check Docker, Compose and AWS setup, and explain how to fix anything missing.
     Doctor,
     /// Print a shell completion script, e.g. `shipfile completions bash > /etc/bash_completion.d/shipfile`.
@@ -59,6 +71,13 @@ pub(crate) enum Command {
         /// Shell to generate for.
         shell: clap_complete::Shell,
     },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub(crate) enum GraphFormat {
+    Tree,
+    Dot,
+    Json,
 }
 
 #[cfg(test)]

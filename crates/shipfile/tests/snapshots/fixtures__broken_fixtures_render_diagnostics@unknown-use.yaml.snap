@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/unknown-use.yaml
+---
+error[E012]: unknown resource `orders-qeue` in `uses`
+  ┌─ unknown-use.yaml:8:12
+  │
+ 8│     uses: [orders-qeue, main-db]
+  │            ^^^^^^^^^^^ not defined under `queues` or `databases`
+  │
+  = help: did you mean `orders-queue`?
+
+error: unknown-use.yaml has 1 error

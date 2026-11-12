@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.png binary
 *.gif binary
+
+# Kept with CRLF line endings to test positions on Windows-style files.
+tests/fixtures/*-crlf.yaml -text

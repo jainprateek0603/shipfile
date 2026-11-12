@@ -32,6 +32,19 @@ jobs:
           components: rustfmt
       - run: cargo fmt --all --check
 
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: 1.99.1
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - name: Committed schema matches the spec types
+        run: cargo xtask schema --check
+
   test:
     name: test (${{ matrix.os }})
     strategy:
@@ -63,9 +76,9 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
-          toolchain: "1.88"
+          toolchain: "1.89"
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      - run: cargo +1.88 check --workspace --locked # `+` beats rust-toolchain.toml
+      - run: cargo +1.89 check --workspace --locked # `+` beats rust-toolchain.toml
 
   docs:
     runs-on: ubuntu-latest
@@ -151,7 +164,7 @@ jobs:
   # check above, so a release can't come from a red commit.
   release-plz:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [fmt, test, msrv, docs, deny, unused-deps, typos, workflows]
+    needs: [fmt, schema, test, msrv, docs, deny, unused-deps, typos, workflows]
     runs-on: ubuntu-latest
     permissions:
       contents: write

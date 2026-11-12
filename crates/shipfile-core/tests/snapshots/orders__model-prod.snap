@@ -1,0 +1,104 @@
+---
+source: crates/shipfile-core/tests/orders.rs
+expression: model
+---
+{
+  "app": {
+    "name": "orders",
+    "env": "prod",
+    "region": "ap-south-1"
+  },
+  "services": {
+    "api": {
+      "build": "api",
+      "runtime": "node22",
+      "runtime_source": "spec",
+      "port": 3000,
+      "public": true,
+      "health": "/healthz",
+      "scale": {
+        "cpu": 256,
+        "memory": 512,
+        "replicas": 2
+      },
+      "env": {
+        "LOG_LEVEL": "info"
+      },
+      "secrets": [
+        "STRIPE_KEY"
+      ],
+      "uses": [
+        "main-db",
+        "orders-queue"
+      ],
+      "command": null
+    },
+    "worker": {
+      "build": "worker",
+      "runtime": "python3.13",
+      "runtime_source": "spec",
+      "port": null,
+      "public": false,
+      "health": null,
+      "scale": {
+        "cpu": 256,
+        "memory": 512,
+        "replicas": 1
+      },
+      "env": {},
+      "secrets": [],
+      "uses": [
+        "orders-queue"
+      ],
+      "command": [
+        "python",
+        "-m",
+        "worker"
+      ]
+    }
+  },
+  "queues": {
+    "orders-queue": {
+      "dlq": {
+        "max_receives": 5
+      }
+    }
+  },
+  "databases": {
+    "main-db": {
+      "engine": "postgres",
+      "size": "medium"
+    },
+    "sessions": {
+      "engine": "dynamodb",
+      "key": {
+        "partition": "id"
+      }
+    }
+  },
+  "uses": [
+    {
+      "service": "api",
+      "resource": "main-db",
+      "kind": "postgres"
+    },
+    {
+      "service": "api",
+      "resource": "orders-queue",
+      "kind": "queue"
+    },
+    {
+      "service": "worker",
+      "resource": "orders-queue",
+      "kind": "queue"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "cost-tags",
+      "options": {
+        "cost_centre": "CC-104"
+      }
+    }
+  ]
+}

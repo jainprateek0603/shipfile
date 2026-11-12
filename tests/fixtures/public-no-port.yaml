@@ -1,0 +1,9 @@
+# E015: a public service without a port
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    public: true
+    health: /healthz

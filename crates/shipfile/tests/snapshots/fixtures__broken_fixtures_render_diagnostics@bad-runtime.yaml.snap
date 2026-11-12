@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/bad-runtime.yaml
+---
+error[E006]: invalid value "ruby3" for `services.api.runtime`
+  ┌─ bad-runtime.yaml:7:14
+  │
+ 7│     runtime: ruby3
+  │              ^^^^^ not in the expected format
+  │
+  = help: use one of `node22`, `python3.13`, `go1.23` or `rust` (other versions work the same way)
+
+error: bad-runtime.yaml has 1 error

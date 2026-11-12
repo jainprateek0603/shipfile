@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/missing-field.yaml
+---
+error[E005]: missing field `build` in `services.api`
+  ┌─ missing-field.yaml:5:3
+  │
+ 5│   api:
+  │   ^^^ `build` is required here
+  │
+  = help: add `build:` under `services.api`
+
+error: missing-field.yaml has 1 error

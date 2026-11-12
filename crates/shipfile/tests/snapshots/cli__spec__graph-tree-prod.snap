@@ -1,0 +1,16 @@
+---
+source: crates/shipfile/tests/cli.rs
+expression: "stdout_of(&[\"-e\", \"prod\", \"graph\"])"
+---
+orders  (env prod · ap-south-1)
+├─ services
+│  ├─ api  node22 · :3000 · public /healthz · 256 cpu / 512 MiB × 2
+│  │  ├─ uses postgres main-db
+│  │  └─ uses queue orders-queue
+│  └─ worker  python3.13 · 256 cpu / 512 MiB × 1
+│     └─ uses queue orders-queue
+├─ queues
+│  └─ orders-queue  dead-letter queue after 5 receives
+└─ databases
+   ├─ main-db  postgres · medium
+   └─ sessions  dynamodb · key id

@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://shipfile.dev/schema/v1.json
+version: 1
+name: orders
+aws:
+  region: ap-south-1
+
+services:
+  api:
+    build: ./api              # Dockerfile is generated here if missing
+    runtime: node22           # optional; detected from package.json
+    port: 3000
+    public: true              # load balancer in front
+    health: /healthz
+    scale: { cpu: 256, memory: 512, replicas: 1 }
+    env:
+      LOG_LEVEL: info
+    secrets: [STRIPE_KEY]
+    uses: [orders-queue, main-db]
+
+  worker:
+    build: ./worker
+    runtime: python3.13
+    command: ["python", "-m", "worker"]
+    uses: [orders-queue]
+
+queues:
+  orders-queue:
+    dlq: { max_receives: 5 }
+
+databases:
+  main-db:
+    engine: postgres
+    size: small               # small | medium; maps to instance classes
+  sessions:
+    engine: dynamodb
+    key: { partition: id }    # sort key optional
+
+environments:
+  prod:
+    services:
+      api: { scale: { replicas: 2 } }
+    databases:
+      main-db: { size: medium }
+
+plugins:
+  - name: cost-tags
+    options: { cost_centre: "CC-104" }

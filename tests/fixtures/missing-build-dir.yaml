@@ -1,0 +1,7 @@
+# E031: a build folder that doesn't exist
+version: 1
+name: shop
+services:
+  api:
+    build: ./does-not-exist
+    runtime: node22

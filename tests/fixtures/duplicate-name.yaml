@@ -1,0 +1,9 @@
+# E011: a queue and a service with the same name
+version: 1
+name: shop
+services:
+  jobs:
+    build: .
+    runtime: go1.23
+queues:
+  jobs:

@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/public-no-health.yaml
+---
+error[E016]: public service `api` has no `health` path
+  ┌─ public-no-health.yaml:9:13
+  │
+ 9│     public: true
+  │             ^^^^ public services need a health check
+  │
+  = help: add `health: /healthz`, a path that returns 200 when the service is ready
+
+error: public-no-health.yaml has 1 error

@@ -1,0 +1,80 @@
+---
+source: crates/shipfile-core/tests/orders.rs
+expression: "model.contract(service).expect(\"known service\")"
+---
+{
+  "service": "worker",
+  "vars": [
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "local": {
+        "from": "literal",
+        "value": "local"
+      },
+      "aws": {
+        "from": "unset"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_ENDPOINT_URL_SQS",
+      "local": {
+        "from": "literal",
+        "value": "http://elasticmq:9324"
+      },
+      "aws": {
+        "from": "unset"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_REGION",
+      "local": {
+        "from": "literal",
+        "value": "ap-south-1"
+      },
+      "aws": {
+        "from": "region"
+      },
+      "secret": false
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "local": {
+        "from": "literal",
+        "value": "local"
+      },
+      "aws": {
+        "from": "unset"
+      },
+      "secret": false
+    },
+    {
+      "name": "ORDERS_QUEUE_URL",
+      "local": {
+        "from": "literal",
+        "value": "http://elasticmq:9324/000000000000/orders-queue"
+      },
+      "aws": {
+        "from": "queue_url",
+        "queue": "orders-queue"
+      },
+      "secret": false
+    }
+  ],
+  "grants": [
+    {
+      "role": "task",
+      "target": "queues.orders-queue",
+      "actions": [
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage"
+      ]
+    }
+  ],
+  "network": []
+}

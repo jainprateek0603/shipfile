@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/missing-build-dir.yaml
+---
+error[E031]: build folder `does-not-exist` does not exist
+  ┌─ missing-build-dir.yaml:6:12
+  │
+ 6│     build: ./does-not-exist
+  │            ^^^^^^^^^^^^^^^^ folder not found
+  │
+  = help: `build` is a folder relative to shipfile.yaml that holds the service's code
+
+error: missing-build-dir.yaml has 1 error

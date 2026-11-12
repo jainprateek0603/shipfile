@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/port-clash.yaml
+---
+error[E014]: port 8080 is used by `admin` and `api`
+  ┌─ port-clash.yaml:8:11
+  │
+ 8│     port: 8080
+  │           ^^^^ already used by `admin`
+  │
+  = help: services run side by side locally, so each needs its own port
+
+error: port-clash.yaml has 1 error

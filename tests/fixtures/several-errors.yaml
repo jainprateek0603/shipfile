@@ -1,0 +1,9 @@
+# Several problems at once, reported in file order
+version: 1
+name: Shop
+services:
+  api:
+    build: .
+    runtime: node22
+    uses: [cache]
+    public: true
