@@ -3,9 +3,11 @@
 //! Probing (running programs, reading env and files) is kept apart from the
 //! evaluation of what was found, so the evaluation is unit-testable.
 
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use owo_colors::{OwoColorize, Stream};
 use serde::Serialize;
@@ -59,15 +61,53 @@ pub(crate) enum Probe {
     NotFound,
     /// Ran but exited non-zero, or could not be started.
     Failed,
+    /// Still running at the deadline, so it was killed.
+    TimedOut,
     /// Ran successfully; holds trimmed stdout.
     Ran(String),
 }
 
+/// How long one probe may run; `docker version` stalls while Docker Desktop starts.
+const PROBE_TIMEOUT: Duration = Duration::from_secs(5);
+
 fn probe(program: &str, args: &[&str]) -> Probe {
-    match Command::new(program).args(args).output() {
-        Err(e) if e.kind() == io::ErrorKind::NotFound => Probe::NotFound,
-        Ok(out) if out.status.success() => Probe::Ran(String::from_utf8_lossy(&out.stdout).trim().to_owned()),
-        Err(_) | Ok(_) => Probe::Failed,
+    let mut child = match Command::new(program)
+        .args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+    {
+        Err(e) if e.kind() == io::ErrorKind::NotFound => return Probe::NotFound,
+        Err(_) => return Probe::Failed,
+        Ok(child) => child,
+    };
+    // Drain stdout on a thread so a chatty program can't block on a full pipe.
+    let mut stdout = child.stdout.take();
+    let reader = thread::spawn(move || {
+        let mut buf = Vec::new();
+        if let Some(out) = stdout.as_mut() {
+            let _ = out.read_to_end(&mut buf);
+        }
+        buf
+    });
+    let deadline = Instant::now() + PROBE_TIMEOUT;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break Some(status),
+            Ok(None) if Instant::now() < deadline => thread::sleep(Duration::from_millis(25)),
+            Ok(None) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Probe::TimedOut;
+            }
+            Err(_) => break None,
+        }
+    };
+    let out = reader.join().unwrap_or_default();
+    match status {
+        Some(s) if s.success() => Probe::Ran(String::from_utf8_lossy(&out).trim().to_owned()),
+        _ => Probe::Failed,
     }
 }
 
@@ -98,6 +138,12 @@ pub(crate) fn check_docker(probe: &Probe) -> Check {
             "installed, but the daemon is not reachable",
             "start Docker Desktop, or run `sudo systemctl start docker` on Linux",
         ),
+        Probe::TimedOut => Check::problem(
+            NAME,
+            Status::Fail,
+            "did not answer within 5 s",
+            "Docker is starting or stuck; retry in a moment, or restart Docker",
+        ),
     }
 }
 
@@ -111,6 +157,12 @@ pub(crate) fn check_compose(probe: &Probe) -> Check {
             None => Check::problem(NAME, Status::Warn, format!("could not read the version from `{version}`"), fix),
         },
         Probe::NotFound | Probe::Failed => Check::problem(NAME, Status::Fail, "not available", fix),
+        Probe::TimedOut => Check::problem(
+            NAME,
+            Status::Fail,
+            "did not answer within 5 s",
+            "Docker is starting or stuck; retry in a moment",
+        ),
     }
 }
 
@@ -242,6 +294,8 @@ mod tests {
         let down = check_docker(&Probe::Failed);
         assert_eq!(down.status, Status::Fail);
         assert!(down.detail.contains("daemon"));
+        assert_eq!(check_docker(&Probe::TimedOut).status, Status::Fail);
+        assert_eq!(check_compose(&Probe::TimedOut).status, Status::Fail);
     }
 
     #[test]

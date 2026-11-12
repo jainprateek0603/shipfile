@@ -9,11 +9,11 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 
 ## 1. Bugs in existing code
 
-- [ ] **B1 · P0 · Usage errors exit with `2`, the same as "plan has changes"**
+- [x] **B1 · P0 · Usage errors exit with `2`, the same as "plan has changes"**
   clap exits with `2` on bad arguments. A CI script using `plan --detailed-exitcode` would read a typo as "there are changes".
   *Fix:* in `main.rs`, use `Cli::try_parse()`. On `Err(e)`: print with `e.print()`. Return `0` for `DisplayHelp`/`DisplayVersion` and `1` (or `64`, `EX_USAGE`) for anything else. Add a CLI test: `shipfile --bogus` must not exit with `2`.
 
-- [ ] **B2 · P0 · `doctor` can hang forever**
+- [x] **B2 · P0 · `doctor` can hang forever**
   `probe()` calls `Command::output()` with no timeout, and `docker version` stalls while Docker Desktop is starting.
   *Fix:* start the probe with `spawn()` and poll `try_wait()` until a deadline (about 5 s), then `kill()`. Or use the `wait-timeout` crate. Add `Probe::TimedOut` with the hint "Docker is starting or stuck; retry in a moment".
 
@@ -41,7 +41,7 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 
 ## 2. CI, release and supply chain
 
-- [ ] **C1 · P0 · Internal crates could be published by accident**
+- [x] **C1 · P0 · Internal crates could be published by accident**
   *Fix:* add `publish = false` to `shipfile-core`, `-cfn`, `-gen`, `-local`, `-aws`. Only `shipfile` and `shipfile-plugin` get published. Consider reserving the names on crates.io early.
 
 - [ ] **C2 · P1 · No dependency audit or licence checks**
@@ -50,7 +50,7 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 - [ ] **C3 · P1 · No automatic dependency updates**
   *Fix:* add `.github/dependabot.yml` for `cargo` and `github-actions`, weekly, grouped minor/patch updates. Renovate also works.
 
-- [ ] **C4 · P1 · Actions and toolchain aren't pinned**
+- [x] **C4 · P1 · Actions and toolchain aren't pinned**
   `ci.yml` uses `checkout@v4` while `release.yml` uses `@v6`, and the toolchain is `stable`, which moves.
   *Fix:* pin third-party actions to commit SHAs (Dependabot keeps them current). Set `channel = "1.xx.y"` in `rust-toolchain.toml` and bump it on purpose.
 

@@ -1,3 +1,4 @@
 [toolchain]
-channel = "stable"
+# Bump on purpose; CI and dist read this.
+channel = "1.99.1"
 components = ["rustfmt", "clippy"]

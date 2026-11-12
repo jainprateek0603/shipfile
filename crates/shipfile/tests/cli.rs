@@ -30,3 +30,15 @@ fn doctor_json_has_stable_shape() {
     assert_eq!(names, ["docker", "docker compose", "aws credentials", "aws region"]);
     assert_eq!(output.status.success(), report["ok"].as_bool().expect("ok flag"));
 }
+
+#[test]
+fn usage_error_does_not_exit_2() {
+    // 2 means "plan has changes"; a typo must not look like that.
+    shipfile().arg("--bogus").assert().code(1).stderr(predicate::str::contains("--bogus"));
+    shipfile().assert().code(1);
+}
+
+#[test]
+fn help_exits_0() {
+    shipfile().arg("--help").assert().code(0).stdout(predicate::str::contains("Usage"));
+}

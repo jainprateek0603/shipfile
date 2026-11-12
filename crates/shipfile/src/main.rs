@@ -6,7 +6,7 @@ mod doctor;
 use std::io::{self, Write};
 use std::process::ExitCode;
 
-use clap::Parser;
+use clap::Parser as _;
 use miette::{IntoDiagnostic, MietteHandlerOpts};
 
 use crate::cli::{Cli, Command};
@@ -30,7 +30,16 @@ impl From<Exit> for ExitCode {
 }
 
 fn main() -> ExitCode {
-    let cli = Cli::parse();
+    // Not `Cli::parse()`: clap exits with 2 on usage errors, which would read as
+    // "plan has changes" to `plan --detailed-exitcode` callers.
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            let _ = e.print();
+            // Help and version go to stdout and are not errors.
+            return if e.use_stderr() { Exit::Error } else { Exit::Ok }.into();
+        }
+    };
     if cli.global.no_color {
         owo_colors::set_override(false);
         let _ = miette::set_hook(Box::new(|_| Box::new(MietteHandlerOpts::new().color(false).build())));
