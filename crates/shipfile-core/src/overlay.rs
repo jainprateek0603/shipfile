@@ -34,7 +34,10 @@ pub fn apply(spec: &RawSpec, env: &RawEnvironment) -> RawSpec {
 }
 
 fn merge_aws(base: Option<&RawAws>, patch: &RawAws) -> RawAws {
-    RawAws { region: patch.region.clone().or_else(|| base.and_then(|b| b.region.clone())) }
+    RawAws {
+        region: patch.region.clone().or_else(|| base.and_then(|b| b.region.clone())),
+        arch: patch.arch.or_else(|| base.and_then(|b| b.arch)),
+    }
 }
 
 pub fn merge_service(base: &RawService, patch: &ServicePatch) -> RawService {
@@ -51,6 +54,8 @@ pub fn merge_service(base: &RawService, patch: &ServicePatch) -> RawService {
         secrets: patch.secrets.clone().unwrap_or_else(|| base.secrets.clone()),
         uses: base.uses.clone(),
         command: patch.command.clone().or_else(|| base.command.clone()),
+        migrate: base.migrate.clone(),
+        health_cmd: patch.health_cmd.clone().or_else(|| base.health_cmd.clone()),
     }
 }
 
@@ -118,6 +123,8 @@ mod tests {
                 secrets,
                 uses: vec!["q".into()],
                 command,
+                migrate: None,
+                health_cmd: None,
             })
     }
 
@@ -139,6 +146,7 @@ mod tests {
                 env,
                 secrets,
                 command,
+                health_cmd: None,
             })
     }
 

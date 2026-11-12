@@ -12,6 +12,10 @@ cargo test --workspace
 
 The toolchain is pinned in `rust-toolchain.toml`; rustup installs it on first build. The minimum supported Rust version is in `Cargo.toml` (`rust-version`).
 
+After changing the spec types in `crates/shipfile-core/src/spec.rs`, run `cargo xtask schema` and commit `schema/shipfile.v1.json`; CI fails when it is stale. A new error code needs a `docs/errors/<code>.md` (a test checks this) and a broken fixture in `tests/fixtures/` whose first line is `# <code>: ...`.
+
+Fuzzing (nightly): `cargo +nightly fuzz run load fuzz/corpus/load tests/fixtures examples/orders`. A weekly workflow runs it too.
+
 CI also runs `cargo deny check`, `typos`, `cargo machete`, `cargo doc` and workflow linters; see `.github/workflows/ci.yml`.
 
 ## Commits

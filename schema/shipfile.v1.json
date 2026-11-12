@@ -1,5 +1,20 @@
 {
   "$defs": {
+    "Arch": {
+      "description": "CPU architecture for images and Fargate tasks.",
+      "oneOf": [
+        {
+          "const": "arm64",
+          "description": "`linux/arm64`; Fargate `ARM64` (Graviton).",
+          "type": "string"
+        },
+        {
+          "const": "x86_64",
+          "description": "`linux/amd64`; Fargate `X86_64`.",
+          "type": "string"
+        }
+      ]
+    },
     "DatabasePatch": {
       "additionalProperties": false,
       "description": "Database fields an environment may override.",
@@ -65,6 +80,17 @@
       "additionalProperties": false,
       "description": "AWS settings.",
       "properties": {
+        "arch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Arch"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "CPU architecture images are built for and Fargate runs: `arm64` (default; Graviton, about\n20% cheaper, native on Apple Silicon) or `x86_64`. See ADR-0007."
+        },
         "region": {
           "description": "AWS region to deploy to, for example `ap-south-1`.",
           "pattern": "^[a-z]{2}(-[a-z]+)+-[0-9]$",
@@ -150,6 +176,13 @@
           },
           "description": "Database overrides, by database name.",
           "type": "object"
+        },
+        "protect": {
+          "description": "Protected environments refuse `apply` from a dirty git tree unless `--allow-dirty` is\npassed. Defaults to `true` for `prod` and `false` for every other environment.",
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "queues": {
           "additionalProperties": {
@@ -289,6 +322,7 @@
           "items": {
             "type": "string"
           },
+          "minItems": 1,
           "type": [
             "array",
             "null"
@@ -306,6 +340,28 @@
           "pattern": "^/",
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "health_cmd": {
+          "description": "Container health check command, for services without an HTTP `health` path (workers).\nExit code `0` means healthy. Used locally and on AWS.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "migrate": {
+          "description": "Command run once, as a one-off task with the new image, before the service is updated\n(for example database migrations). The deploy stops if it exits non-zero.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": [
+            "array",
             "null"
           ]
         },
@@ -373,6 +429,7 @@
           "items": {
             "type": "string"
           },
+          "minItems": 1,
           "type": [
             "array",
             "null"
@@ -388,6 +445,16 @@
           "pattern": "^/",
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "health_cmd": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": [
+            "array",
             "null"
           ]
         },

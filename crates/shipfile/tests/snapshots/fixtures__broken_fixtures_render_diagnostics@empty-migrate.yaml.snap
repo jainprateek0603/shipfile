@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/empty-migrate.yaml
+---
+error[E006]: `services.api.migrate` is empty
+  ┌─ empty-migrate.yaml:8:5
+  │
+ 8│     migrate: []
+  │     ^^^^^^^ needs at least one item
+  │
+  = help: give the command as a list, for example `migrate: ["npm", "run", "migrate"]`, or remove `migrate`
+
+error: empty-migrate.yaml has 1 error

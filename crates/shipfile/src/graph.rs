@@ -18,6 +18,10 @@ pub(crate) fn tree(model: &Model) -> String {
     if let Some(region) = &model.app.region {
         facts.push(region.clone());
     }
+    facts.push(model.app.arch.as_str().to_owned());
+    if model.app.protect {
+        facts.push("protected".to_owned());
+    }
     if !facts.is_empty() {
         let _ = write!(header, "  ({})", facts.join(" · "));
     }
@@ -88,6 +92,12 @@ fn describe_service(svc: &Service) -> String {
     }
     if svc.public {
         parts.push(format!("public {}", svc.health.as_deref().unwrap_or("")).trim_end().to_owned());
+    }
+    if svc.health_cmd.is_some() {
+        parts.push("health cmd".to_owned());
+    }
+    if svc.migrate.is_some() {
+        parts.push("migrates".to_owned());
     }
     let s = svc.scale;
     parts.push(format!("{} cpu / {} MiB × {}", s.cpu, s.memory, s.replicas));

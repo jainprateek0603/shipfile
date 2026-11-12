@@ -144,7 +144,7 @@ fn explain(doc: &Document, schema: &Json, error: &ValidationError<'_>, out: &mut
                 .collect();
             let help = instance
                 .as_str()
-                .and_then(|v| did_you_mean(v, options.iter().map(String::as_str)))
+                .and_then(|v| alias(v, &options).or_else(|| did_you_mean(v, options.iter().map(String::as_str))))
                 .unwrap_or_else(|| format!("use one of {}", backticked(&options)));
             out.push(
                 Diagnostic::error(Code::InvalidValue, format!("invalid value {instance} for {}", dotted(&path)))
@@ -199,7 +199,7 @@ fn explain(doc: &Document, schema: &Json, error: &ValidationError<'_>, out: &mut
             } else if !consts.is_empty() && instance.is_string() {
                 let help = instance
                     .as_str()
-                    .and_then(|v| did_you_mean(v, consts.iter().map(String::as_str)))
+                    .and_then(|v| alias(v, &consts).or_else(|| did_you_mean(v, consts.iter().map(String::as_str))))
                     .unwrap_or_else(|| format!("use one of {}", backticked(&consts)));
                 out.push(
                     Diagnostic::error(Code::InvalidValue, format!("invalid value {instance} for {}", dotted(&path)))
@@ -226,13 +226,38 @@ fn explain(doc: &Document, schema: &Json, error: &ValidationError<'_>, out: &mut
                 );
             }
         }
-        other => {
+        ValidationErrorKind::MinItems { limit } => {
+            // Only command lists (`command`, `migrate`, `health_cmd`) have a minimum length.
+            let label = if *limit == 1 {
+                "needs at least one item".to_owned()
+            } else {
+                format!("needs at least {limit} items")
+            };
             out.push(
-                Diagnostic::error(Code::InvalidValue, format!("invalid value for {}: {other:?}", dotted(&path)))
+                Diagnostic::error(Code::InvalidValue, format!("{} is empty", dotted(&path)))
+                    .at(doc.span(&refs), label)
+                    .with_help(format!("give the command as a list, for example `{field}: [\"npm\", \"run\", \"migrate\"]`, or remove `{field}`")),
+            );
+        }
+        _ => {
+            out.push(
+                Diagnostic::error(Code::InvalidValue, format!("invalid value for {}: {error}", dotted(&path)))
                     .at(doc.span(&refs), "invalid value"),
             );
         }
     }
+}
+
+/// Common other names for allowed values, which edit distance can't find (`amd64` → `x86_64`).
+fn alias(value: &str, options: &[String]) -> Option<String> {
+    let canonical = match value.to_ascii_lowercase().as_str() {
+        "amd64" | "x64" | "x86-64" | "x86" | "intel" => "x86_64",
+        "aarch64" | "arm" | "graviton" => "arm64",
+        "postgresql" | "pg" | "rds" => "postgres",
+        "dynamo" | "ddb" => "dynamodb",
+        _ => return None,
+    };
+    options.iter().any(|o| o == canonical).then(|| format!("did you mean `{canonical}`?"))
 }
 
 fn backticked(items: &[String]) -> String {

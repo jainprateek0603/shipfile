@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/bad-arch.yaml
+---
+error[E006]: invalid value "amd64" for `aws.arch`
+  ┌─ bad-arch.yaml:6:9
+  │
+ 6│   arch: amd64
+  │         ^^^^^ not one of `arm64`, `x86_64`
+  │
+  = help: did you mean `x86_64`?
+
+error: bad-arch.yaml has 1 error

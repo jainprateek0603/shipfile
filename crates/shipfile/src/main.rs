@@ -107,6 +107,11 @@ fn run(cli: &Cli, handler: Handler) -> miette::Result<Exit> {
             Ok(Exit::Ok)
         }
         Command::Check => check(&cli.global, handler, &mut stdout),
+        Command::Schema => {
+            stdout.write_all(shipfile_core::schema::schema_text().as_bytes()).into_diagnostic()?;
+            Ok(Exit::Ok)
+        }
+        Command::Explain { code } => explain(code, cli.global.json, &mut stdout),
         Command::Graph { format } => {
             let format = if cli.global.json { GraphFormat::Json } else { *format };
             let loaded = match load(&cli.global)? {
@@ -116,11 +121,38 @@ fn run(cli: &Cli, handler: Handler) -> miette::Result<Exit> {
             match format {
                 GraphFormat::Tree => stdout.write_all(graph::tree(&loaded.model).as_bytes()).into_diagnostic()?,
                 GraphFormat::Dot => stdout.write_all(graph::dot(&loaded.model).as_bytes()).into_diagnostic()?,
-                GraphFormat::Json => write_json(&mut stdout, &loaded.model)?,
+                GraphFormat::Json => write_json(&mut stdout, &Versioned { schema_version: 1, inner: &loaded.model })?,
             }
             Ok(Exit::Ok)
         }
     }
+}
+
+/// Shape version of every `--json` document; see `docs/json-output.md`.
+#[derive(Serialize)]
+struct Versioned<'a, T: Serialize> {
+    schema_version: u32,
+    #[serde(flatten)]
+    inner: &'a T,
+}
+
+fn explain(code: &str, json: bool, stdout: &mut impl Write) -> miette::Result<Exit> {
+    let Some(found) = shipfile_core::diagnostics::Code::parse(code) else {
+        let known: Vec<&str> = shipfile_core::diagnostics::Code::ALL.iter().map(|c| c.as_str()).collect();
+        return Err(miette!(help = format!("known codes: {}", known.join(", ")), "no error code `{code}`"));
+    };
+    if json {
+        #[derive(Serialize)]
+        struct Explanation<'a> {
+            schema_version: u32,
+            code: &'a str,
+            text: &'a str,
+        }
+        write_json(stdout, &Explanation { schema_version: 1, code: found.as_str(), text: found.explanation() })?;
+    } else {
+        stdout.write_all(found.explanation().as_bytes()).into_diagnostic()?;
+    }
+    Ok(Exit::Ok)
 }
 
 fn write_json(out: &mut impl Write, value: &impl Serialize) -> miette::Result<()> {
@@ -153,6 +185,7 @@ fn load(global: &GlobalArgs) -> miette::Result<Result<Loaded, Box<shipfile_core:
 
 #[derive(Serialize)]
 struct CheckReport<'a> {
+    schema_version: u32,
     ok: bool,
     file: String,
     env: Option<&'a str>,
@@ -178,7 +211,17 @@ fn report_failure(
     if global.json {
         let diagnostics =
             failed.diagnostics.items.iter().map(|d| JsonDiagnostic::new(d, &file, &failed.text)).collect();
-        write_json(stdout, &CheckReport { ok: false, file, env: global.env.as_deref(), diagnostics, resources: None })?;
+        write_json(
+            stdout,
+            &CheckReport {
+                schema_version: 1,
+                ok: false,
+                file,
+                env: global.env.as_deref(),
+                diagnostics,
+                resources: None,
+            },
+        )?;
     } else {
         io::stderr().lock().write_all(report::render_failed(failed, &file, handler).as_bytes()).into_diagnostic()?;
     }
@@ -196,6 +239,7 @@ fn check(global: &GlobalArgs, handler: Handler, stdout: &mut impl Write) -> miet
     let file = display_path(&global.file);
     if global.json {
         let report = CheckReport {
+            schema_version: 1,
             ok: true,
             file,
             env: global.env.as_deref(),
@@ -208,7 +252,8 @@ fn check(global: &GlobalArgs, handler: Handler, stdout: &mut impl Write) -> miet
         let env = global.env.as_deref().map(|e| format!(" (environment `{e}`)")).unwrap_or_default();
         writeln!(
             stdout,
-            "✓ {file} is valid{env}: {}, {}, {}",
+            "{} {file} is valid{env}: {}, {}, {}",
+            doctor::Marks::detect(global.ascii).ok(),
             plural(counts.services, "service"),
             plural(counts.queues, "queue"),
             plural(counts.databases, "database"),

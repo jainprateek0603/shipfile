@@ -111,7 +111,7 @@ mod spec {
         assert_eq!(
             report,
             serde_json::json!({
-                "ok": true, "file": "shipfile.yaml", "env": null, "diagnostics": [],
+                "schema_version": 1, "ok": true, "file": "shipfile.yaml", "env": null, "diagnostics": [],
                 "resources": {"services": 2, "queues": 1, "databases": 2}
             })
         );
@@ -209,4 +209,44 @@ mod spec {
     fn file_flag_points_elsewhere() {
         shipfile().arg("-f").arg(orders().join("shipfile.yaml")).arg("check").assert().success();
     }
+}
+
+#[test]
+fn schema_prints_the_committed_schema() {
+    let out = shipfile().arg("schema").assert().success().get_output().stdout.clone();
+    let printed: serde_json::Value = serde_json::from_slice(&out).expect("JSON");
+    let committed = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../schema/shipfile.v1.json"))
+        .expect("schema file");
+    let committed: serde_json::Value = serde_json::from_str(&committed).expect("JSON");
+    assert_eq!(printed, committed);
+}
+
+#[test]
+fn explain_prints_the_long_text() {
+    shipfile().args(["explain", "E012"]).assert().success().stdout(predicate::str::starts_with("# E012: "));
+    shipfile().args(["explain", "e12"]).assert().success().stdout(predicate::str::contains("`uses`"));
+    let out = shipfile().args(["explain", "E012", "--json"]).assert().success().get_output().stdout.clone();
+    let value: serde_json::Value = serde_json::from_slice(&out).expect("JSON");
+    assert_eq!((value["schema_version"].as_u64(), value["code"].as_str()), (Some(1), Some("E012")));
+}
+
+#[test]
+fn explain_unknown_code_lists_known_ones() {
+    shipfile()
+        .args(["explain", "E999", "--no-color"])
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("no error code `E999`"))
+        .stderr(predicate::str::contains("E001"));
+}
+
+#[test]
+fn check_ascii_marks() {
+    let orders = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/orders");
+    shipfile()
+        .current_dir(orders)
+        .args(["check", "--ascii", "--no-color"])
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with("[ok] shipfile.yaml is valid"));
 }

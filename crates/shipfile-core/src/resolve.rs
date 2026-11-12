@@ -21,10 +21,14 @@ pub fn resolve(
     env: Option<&str>,
     project: &dyn Project,
 ) -> Result<Model, Vec<Diagnostic>> {
-    let (spec, env) = match env {
-        None => (spec.clone(), None),
+    let (spec, env, guarded) = match env {
+        None => (spec.clone(), None, false),
         Some(env) => match spec.environments.get(env) {
-            Some(overrides) => (overlay::apply(spec, &overrides.clone().unwrap_or_default()), Some(name(env)?)),
+            Some(overrides) => {
+                let overrides = overrides.clone().unwrap_or_default();
+                let guarded = overrides.protect.unwrap_or(env == "prod");
+                (overlay::apply(spec, &overrides), Some(name(env)?), guarded)
+            }
             None => return Err(vec![unknown_environment(doc, spec, env)]),
         },
     };
@@ -61,7 +65,13 @@ pub fn resolve(
     }
 
     let mut model = Model {
-        app: App { name: name(&spec.name)?, env, region: spec.aws.as_ref().and_then(|a| a.region.clone()) },
+        app: App {
+            name: name(&spec.name)?,
+            env,
+            region: spec.aws.as_ref().and_then(|a| a.region.clone()),
+            arch: spec.aws.as_ref().and_then(|a| a.arch).unwrap_or_default(),
+            protect: guarded,
+        },
         services,
         queues,
         databases,
@@ -157,5 +167,7 @@ fn service(doc: &Document, svc_name: &str, raw: &RawService, project: &dyn Proje
         secrets,
         uses,
         command: raw.command.clone(),
+        migrate: raw.migrate.clone(),
+        health_cmd: raw.health_cmd.clone(),
     })
 }

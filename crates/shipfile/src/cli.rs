@@ -64,6 +64,13 @@ pub(crate) enum Command {
         #[arg(long, value_enum, default_value_t = GraphFormat::Tree)]
         format: GraphFormat,
     },
+    /// Print the spec's JSON Schema (for editors and other tools).
+    Schema,
+    /// Explain an error code in detail, for example `shipfile explain E012`.
+    Explain {
+        /// The error code, such as `E012`.
+        code: String,
+    },
     /// Check Docker, Compose and AWS setup, and explain how to fix anything missing.
     Doctor,
     /// Print a shell completion script, e.g. `shipfile completions bash > /etc/bash_completion.d/shipfile`.

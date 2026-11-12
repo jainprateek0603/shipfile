@@ -1,0 +1,14 @@
+---
+source: crates/shipfile/tests/fixtures.rs
+expression: stderr
+input_file: tests/fixtures/health-cmd-typo.yaml
+---
+error[E003]: unknown field `healthcmd` in `services.worker`
+  ┌─ health-cmd-typo.yaml:8:5
+  │
+ 8│     healthcmd: ["python", "-m", "worker.health"]
+  │     ^^^^^^^^^ not a known field
+  │
+  = help: did you mean `health_cmd`?
+
+error: health-cmd-typo.yaml has 1 error

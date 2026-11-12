@@ -1,0 +1,8 @@
+# E006: an empty `migrate` command
+version: 1
+name: shop
+services:
+  api:
+    build: .
+    runtime: node22
+    migrate: []

@@ -6,7 +6,9 @@ expression: model
   "app": {
     "name": "orders",
     "env": "prod",
-    "region": "ap-south-1"
+    "region": "ap-south-1",
+    "arch": "arm64",
+    "protect": true
   },
   "services": {
     "api": {
@@ -31,7 +33,13 @@ expression: model
         "main-db",
         "orders-queue"
       ],
-      "command": null
+      "command": null,
+      "migrate": [
+        "npm",
+        "run",
+        "migrate"
+      ],
+      "health_cmd": null
     },
     "worker": {
       "build": "worker",
@@ -54,6 +62,12 @@ expression: model
         "python",
         "-m",
         "worker"
+      ],
+      "migrate": null,
+      "health_cmd": [
+        "python",
+        "-m",
+        "worker.health"
       ]
     }
   },

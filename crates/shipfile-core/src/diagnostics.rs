@@ -40,6 +40,67 @@ pub enum Code {
 }
 
 impl Code {
+    /// Every code, in order.
+    pub const ALL: [Self; 22] = [
+        Self::Syntax,
+        Self::DuplicateKey,
+        Self::UnknownField,
+        Self::WrongType,
+        Self::MissingField,
+        Self::InvalidValue,
+        Self::UnsupportedVersion,
+        Self::InvalidName,
+        Self::DuplicateName,
+        Self::UnknownUse,
+        Self::DuplicateEntry,
+        Self::PortClash,
+        Self::PublicNeedsPort,
+        Self::PublicNeedsHealth,
+        Self::DynamodbNeedsKey,
+        Self::FieldNotForEngine,
+        Self::InvalidScale,
+        Self::UnknownEnvironment,
+        Self::OverlayUnknownResource,
+        Self::EnvVarCollision,
+        Self::RuntimeNotDetected,
+        Self::BuildDirMissing,
+    ];
+
+    /// Parses `E012` or `e012` (or just `12`).
+    pub fn parse(text: &str) -> Option<Self> {
+        let digits = text.trim().trim_start_matches(['E', 'e']);
+        let n: u32 = digits.parse().ok()?;
+        Self::ALL.into_iter().find(|c| c.as_str()[1..].parse::<u32>().ok() == Some(n))
+    }
+
+    /// The long explanation shown by `shipfile explain`, from `docs/errors/<code>.md`.
+    pub const fn explanation(self) -> &'static str {
+        match self {
+            Self::Syntax => include_str!("../../../docs/errors/E001.md"),
+            Self::DuplicateKey => include_str!("../../../docs/errors/E002.md"),
+            Self::UnknownField => include_str!("../../../docs/errors/E003.md"),
+            Self::WrongType => include_str!("../../../docs/errors/E004.md"),
+            Self::MissingField => include_str!("../../../docs/errors/E005.md"),
+            Self::InvalidValue => include_str!("../../../docs/errors/E006.md"),
+            Self::UnsupportedVersion => include_str!("../../../docs/errors/E007.md"),
+            Self::InvalidName => include_str!("../../../docs/errors/E010.md"),
+            Self::DuplicateName => include_str!("../../../docs/errors/E011.md"),
+            Self::UnknownUse => include_str!("../../../docs/errors/E012.md"),
+            Self::DuplicateEntry => include_str!("../../../docs/errors/E013.md"),
+            Self::PortClash => include_str!("../../../docs/errors/E014.md"),
+            Self::PublicNeedsPort => include_str!("../../../docs/errors/E015.md"),
+            Self::PublicNeedsHealth => include_str!("../../../docs/errors/E016.md"),
+            Self::DynamodbNeedsKey => include_str!("../../../docs/errors/E017.md"),
+            Self::FieldNotForEngine => include_str!("../../../docs/errors/E018.md"),
+            Self::InvalidScale => include_str!("../../../docs/errors/E019.md"),
+            Self::UnknownEnvironment => include_str!("../../../docs/errors/E020.md"),
+            Self::OverlayUnknownResource => include_str!("../../../docs/errors/E021.md"),
+            Self::EnvVarCollision => include_str!("../../../docs/errors/E022.md"),
+            Self::RuntimeNotDetected => include_str!("../../../docs/errors/E030.md"),
+            Self::BuildDirMissing => include_str!("../../../docs/errors/E031.md"),
+        }
+    }
+
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Syntax => "E001",
@@ -206,6 +267,28 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_code_has_an_explanation_and_parses_back() {
+        for code in Code::ALL {
+            assert!(code.explanation().starts_with(&format!("# {code}: ")), "{code}");
+            assert_eq!(Code::parse(code.as_str()), Some(code));
+            assert_eq!(Code::parse(&code.as_str().to_lowercase()), Some(code));
+        }
+        assert_eq!(Code::parse("12"), Some(Code::UnknownUse));
+        assert_eq!(Code::parse("E999"), None);
+        assert_eq!(Code::parse("nope"), None);
+    }
+
+    #[test]
+    fn no_orphan_error_docs() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/errors");
+        for entry in std::fs::read_dir(dir).expect("docs/errors") {
+            let name = entry.expect("entry").file_name().to_string_lossy().into_owned();
+            let code = name.strip_suffix(".md").expect("only .md files");
+            assert!(Code::parse(code).is_some_and(|c| c.as_str() == code), "{name} has no matching code");
+        }
+    }
 
     #[test]
     fn suggestions_catch_typos() {

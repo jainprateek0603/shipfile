@@ -46,6 +46,39 @@ pub struct RawAws {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = r"^[a-z]{2}(-[a-z]+)+-[0-9]$"))]
     pub region: Option<String>,
+    /// CPU architecture images are built for and Fargate runs: `arm64` (default; Graviton, about
+    /// 20% cheaper, native on Apple Silicon) or `x86_64`. See ADR-0007.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arch: Option<Arch>,
+}
+
+/// CPU architecture for images and Fargate tasks.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize, JsonSchema)]
+pub enum Arch {
+    /// `linux/arm64`; Fargate `ARM64` (Graviton).
+    #[default]
+    #[serde(rename = "arm64")]
+    Arm64,
+    /// `linux/amd64`; Fargate `X86_64`.
+    #[serde(rename = "x86_64")]
+    X86_64,
+}
+
+impl Arch {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Arm64 => "arm64",
+            Self::X86_64 => "x86_64",
+        }
+    }
+
+    /// The `docker buildx --platform` value.
+    pub const fn docker_platform(self) -> &'static str {
+        match self {
+            Self::Arm64 => "linux/arm64",
+            Self::X86_64 => "linux/amd64",
+        }
+    }
 }
 
 /// A container service.
@@ -86,7 +119,18 @@ pub struct RawService {
     pub uses: Vec<String>,
     /// Command to run instead of the image's default.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1))]
     pub command: Option<Vec<String>>,
+    /// Command run once, as a one-off task with the new image, before the service is updated
+    /// (for example database migrations). The deploy stops if it exits non-zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1))]
+    pub migrate: Option<Vec<String>>,
+    /// Container health check command, for services without an HTTP `health` path (workers).
+    /// Exit code `0` means healthy. Used locally and on AWS.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1))]
+    pub health_cmd: Option<Vec<String>>,
 }
 
 /// CPU, memory and replica count. Any field left out takes its default.
@@ -214,6 +258,10 @@ pub struct RawKey {
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RawEnvironment {
+    /// Protected environments refuse `apply` from a dirty git tree unless `--allow-dirty` is
+    /// passed. Defaults to `true` for `prod` and `false` for every other environment.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protect: Option<bool>,
     /// AWS settings for this environment.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub aws: Option<RawAws>,
@@ -248,7 +296,11 @@ pub struct ServicePatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub secrets: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1))]
     pub command: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1))]
+    pub health_cmd: Option<Vec<String>>,
 }
 
 /// Queue fields an environment may override.

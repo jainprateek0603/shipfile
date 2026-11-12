@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::name::Name;
 use crate::project::Runtime;
-use crate::spec::Size;
+use crate::spec::{Arch, Size};
 
 pub const DEFAULT_CPU: u32 = 256;
 pub const DEFAULT_MEMORY: u32 = 512;
@@ -31,6 +31,10 @@ pub struct App {
     /// The environment applied with `-e`, if any.
     pub env: Option<Name>,
     pub region: Option<String>,
+    /// CPU architecture for images and Fargate tasks (ADR-0007).
+    pub arch: Arch,
+    /// Whether `apply` refuses a dirty git tree for this environment. Always `false` without `-e`.
+    pub protect: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -51,6 +55,10 @@ pub struct Service {
     /// Resources this service uses, sorted.
     pub uses: Vec<Name>,
     pub command: Option<Vec<String>>,
+    /// One-off command run before the service updates (migrations).
+    pub migrate: Option<Vec<String>>,
+    /// Container health check command.
+    pub health_cmd: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]

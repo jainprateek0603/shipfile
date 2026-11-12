@@ -11,21 +11,21 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
 
 | Item | State | Where / when |
 |---|---|---|
-| B1–B7 | done | `main.rs`, `doctor.rs`, `panic.rs` |
+| B1–B7 | done | `main.rs`, `doctor.rs`, `panic.rs`; `check`/`graph`/`explain` JSON carry `schema_version`, `check` honours `--ascii` |
 | C1–C8 | done | `Cargo.toml`s, `ci.yml`, `deny.toml`, `dependabot.yml`, `release-plz.toml`, `dist-workspace.toml` |
 | C9 | partly | `cargo binstall` + `~/.local/bin` done; Homebrew, Scoop/winget, `msi` in Phase 8 |
 | C10 | partly | doc, coverage, nextest, machete in CI; `cargo-semver-checks` in Phase 7 (needs a published baseline) |
-| C11 | specced | Phase 1, with the parser |
+| C11 | done | `fuzz/` (`parse`, `load`), weekly `fuzz.yml`; a stable proptest twin (`no_panic.rs`) runs in every CI |
 | C12 | specced | Phase 2, with `gen` |
-| P1 | decided | ADR-0007 (arm64 default); `doctor` checks buildx; built in Phases 3–6 |
-| P2, P3 | specced | `run`, `migrate`, `logs -e`, `shell`: Phases 3 and 6 |
-| P4, P5 | specced | `rollback` Phase 6; `health_cmd` Phase 3 |
+| P1 | partly | ADR-0007; spec field `aws.arch` (default `arm64`) in the model; `doctor` checks buildx; `--platform` builds in Phases 3–6 |
+| P2, P3 | partly | spec field `migrate` in the model; `run`, `logs -e`, `shell`: Phases 3 and 6 |
+| P4, P5 | partly | spec field `health_cmd` in the model; mapped to `HealthCheck` in Phases 3–4; `rollback` Phase 6 |
 | P6 | specced | private isolated subnets: Phase 4 |
 | P7 | done | PLAN.md §9; shown in `plan` with the cost estimate |
-| P8, P9 | specced | dirty-tree guard Phase 6; security-changes section Phase 5 |
+| P8, P9 | partly | `environments.<env>.protect` (default `true` for `prod`) in the model; guard Phase 6; security-changes section Phase 5 |
 | P10 | specced | PLAN §6.6 + ADR-0004; Phase 7 |
 | P11 | specced | `migrate-spec` when `version: 2` exists |
-| P12 | partly | completions done; `schema`, `explain` Phase 1; `.env.example` Phase 2; man pages Phase 8 |
+| P12 | partly | completions, `schema`, `explain` (texts in `docs/errors/`) done; `.env.example` Phase 2; man pages Phase 8 |
 | P13 | done | `doctor` |
 | P14 | done | PLAN.md §12 (create the `post-1.0` label on GitHub) |
 | D1–D4 | done | `SECURITY.md`, `docs/json-output.md`, `docs/exit-codes.md`, README, `CONTRIBUTING.md` |
@@ -111,7 +111,7 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
   - `cargo-nextest` for faster, clearer test runs
   - `cargo-machete` for unused dependencies
 
-- [ ] **C11 · P2 · The YAML parser isn't fuzzed**
+- [x] **C11 · P2 · The YAML parser isn't fuzzed**
   *Fix:* add `fuzz/` with `cargo-fuzz`, with targets `parse` and `parse+validate`. It must never panic, only return diagnostics. Run it for a few minutes in a weekly scheduled job.
 
 - [ ] **C12 · P2 · Determinism isn't tested across operating systems**

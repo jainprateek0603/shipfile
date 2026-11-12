@@ -12,6 +12,7 @@ confidence-threshold = 0.9
 unused-allowed-license = "allow"
 allow = [
     "MIT",
+    "MIT-0", # borrow-or-share, via jsonschema; MIT without the attribution clause
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",

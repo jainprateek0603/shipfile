@@ -4,8 +4,10 @@ expression: value
 ---
 {
   "app": {
+    "arch": "arm64",
     "env": null,
     "name": "orders",
+    "protect": false,
     "region": "ap-south-1"
   },
   "databases": {
@@ -35,6 +37,7 @@ expression: value
       }
     }
   },
+  "schema_version": 1,
   "services": {
     "api": {
       "build": "api",
@@ -43,6 +46,12 @@ expression: value
         "LOG_LEVEL": "info"
       },
       "health": "/healthz",
+      "health_cmd": null,
+      "migrate": [
+        "npm",
+        "run",
+        "migrate"
+      ],
       "port": 3000,
       "public": true,
       "runtime": "node22",
@@ -69,6 +78,12 @@ expression: value
       ],
       "env": {},
       "health": null,
+      "health_cmd": [
+        "python",
+        "-m",
+        "worker.health"
+      ],
+      "migrate": null,
       "port": null,
       "public": false,
       "runtime": "python3.13",

@@ -3,6 +3,7 @@ version: 1
 name: orders
 aws:
   region: ap-south-1
+  arch: arm64               # arm64 (default, Graviton) | x86_64; see ADR-0007
 
 services:
   api:
@@ -15,12 +16,14 @@ services:
     env:
       LOG_LEVEL: info
     secrets: [STRIPE_KEY]
+    migrate: ["npm", "run", "migrate"]   # optional; run as a one-off task before the service updates
     uses: [orders-queue, main-db]
 
   worker:
     build: ./worker
     runtime: python3.13
     command: ["python", "-m", "worker"]
+    health_cmd: ["python", "-m", "worker.health"]   # optional; container HealthCheck locally and on AWS
     uses: [orders-queue]
 
 queues:

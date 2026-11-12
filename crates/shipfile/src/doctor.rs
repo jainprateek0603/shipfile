@@ -395,6 +395,10 @@ impl Marks {
     pub(crate) const UNICODE: Self = Self { ok: "✓", warn: "!", fail: "✗" };
     pub(crate) const ASCII: Self = Self { ok: "[ok]", warn: "[!]", fail: "[x]" };
 
+    pub(crate) const fn ok(self) -> &'static str {
+        self.ok
+    }
+
     pub(crate) fn detect(force_ascii: bool) -> Self {
         let dumb = std::env::var("TERM").is_ok_and(|t| t == "dumb");
         if force_ascii || dumb || !supports_unicode::on(supports_unicode::Stream::Stdout) {

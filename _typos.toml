@@ -1,7 +1,10 @@
 # crate-ci/typos config
 [default.extend-words]
-# Deliberate misspelling in the "did you mean" example in PLAN.md.
+# Deliberate misspellings in "did you mean" examples and tests.
 qeue = "qeue"
+sesions = "sesions"
+medum = "medum"
 
 [files]
-extend-exclude = ["CHANGELOG.md", "*.snap"]
+# Broken specs are misspelled on purpose; snapshots copy them.
+extend-exclude = ["CHANGELOG.md", "*.snap", "tests/fixtures/", "fuzz/corpus/"]
