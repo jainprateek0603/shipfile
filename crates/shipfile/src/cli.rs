@@ -17,6 +17,7 @@ pub(crate) struct Cli {
 }
 
 #[derive(Debug, Args)]
+#[expect(clippy::struct_excessive_bools, reason = "independent CLI flags")]
 pub(crate) struct GlobalArgs {
     /// Path to the spec file.
     #[arg(short = 'f', long = "file", global = true, default_value = "shipfile.yaml")]
@@ -36,14 +37,16 @@ pub(crate) struct GlobalArgs {
     #[arg(long, global = true)]
     pub(crate) no_color: bool,
 
+    /// Use ASCII status marks instead of Unicode symbols.
+    #[arg(long, global = true)]
+    pub(crate) ascii: bool,
+
     /// More output; repeat for more detail.
     #[arg(short, long, global = true, action = clap::ArgAction::Count, conflicts_with = "quiet")]
-    #[expect(dead_code, reason = "wired to logging once there is something to log")]
     pub(crate) verbose: u8,
 
     /// Only print results and errors.
     #[arg(short, long, global = true)]
-    #[expect(dead_code, reason = "wired to progress output from phase 3")]
     pub(crate) quiet: bool,
 }
 
@@ -51,6 +54,11 @@ pub(crate) struct GlobalArgs {
 pub(crate) enum Command {
     /// Check Docker, Compose and AWS setup, and explain how to fix anything missing.
     Doctor,
+    /// Print a shell completion script, e.g. `shipfile completions bash > /etc/bash_completion.d/shipfile`.
+    Completions {
+        /// Shell to generate for.
+        shell: clap_complete::Shell,
+    },
 }
 
 #[cfg(test)]

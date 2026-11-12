@@ -2,11 +2,12 @@
 
 mod cli;
 mod doctor;
+mod panic;
 
 use std::io::{self, Write};
 use std::process::ExitCode;
 
-use clap::Parser as _;
+use clap::{CommandFactory as _, Parser as _};
 use miette::{IntoDiagnostic, MietteHandlerOpts};
 
 use crate::cli::{Cli, Command};
@@ -40,6 +41,8 @@ fn main() -> ExitCode {
             return if e.use_stderr() { Exit::Error } else { Exit::Ok }.into();
         }
     };
+    panic::install();
+    init_logging(cli.global.verbose, cli.global.quiet, cli.global.no_color);
     if cli.global.no_color {
         owo_colors::set_override(false);
         let _ = miette::set_hook(Box::new(|_| Box::new(MietteHandlerOpts::new().color(false).build())));
@@ -53,16 +56,41 @@ fn main() -> ExitCode {
     }
 }
 
+/// Logs go to stderr. `-v` debug, `-vv` trace, `-q` errors only; `SHIPFILE_LOG` overrides.
+/// Never log secret values: types holding them redact themselves in `Debug`.
+fn init_logging(verbose: u8, quiet: bool, no_color: bool) {
+    use std::io::IsTerminal as _;
+    use tracing_subscriber::EnvFilter;
+    let level = match (quiet, verbose) {
+        (true, _) => "error",
+        (false, 0) => "warn",
+        (false, 1) => "debug",
+        (false, _) => "trace",
+    };
+    let filter =
+        EnvFilter::try_from_env("SHIPFILE_LOG").unwrap_or_else(|_| EnvFilter::new(format!("shipfile={level}")));
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(io::stderr)
+        .with_ansi(!no_color && std::env::var_os("NO_COLOR").is_none() && io::stderr().is_terminal())
+        .without_time()
+        .try_init();
+}
+
 fn run(cli: &Cli) -> miette::Result<Exit> {
     let mut stdout = io::stdout().lock();
-    match cli.command {
+    match &cli.command {
+        Command::Completions { shell } => {
+            clap_complete::generate(*shell, &mut Cli::command(), "shipfile", &mut stdout);
+            Ok(Exit::Ok)
+        }
         Command::Doctor => {
             let report = doctor::run();
             if cli.global.json {
                 serde_json::to_writer_pretty(&mut stdout, &report).into_diagnostic()?;
                 writeln!(stdout).into_diagnostic()?;
             } else {
-                doctor::render(&report, &mut stdout).into_diagnostic()?;
+                doctor::render(&report, doctor::Marks::detect(cli.global.ascii), &mut stdout).into_diagnostic()?;
             }
             Ok(if report.ok { Exit::Ok } else { Exit::Error })
         }

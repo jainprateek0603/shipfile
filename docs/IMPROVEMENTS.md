@@ -17,24 +17,24 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
   `probe()` calls `Command::output()` with no timeout, and `docker version` stalls while Docker Desktop is starting.
   *Fix:* start the probe with `spawn()` and poll `try_wait()` until a deadline (about 5 s), then `kill()`. Or use the `wait-timeout` crate. Add `Probe::TimedOut` with the hint "Docker is starting or stuck; retry in a moment".
 
-- [ ] **B3 · P1 · AWS credential detection gives wrong answers**
+- [x] **B3 · P1 · AWS credential detection gives wrong answers**
   - `AWS_PROFILE=x` is reported OK even if profile `x` doesn't exist.
   - `credential_process`, container credentials (`AWS_CONTAINER_CREDENTIALS_FULL_URI` / `_RELATIVE_URI`) and EC2 instance credentials aren't detected.
   - The `sso_` check matches any profile, not the active one.
 
   *Fix:* reuse the section parser from `region_from_config` as a small `profile_section(config, profile) -> Option<&str>`. Check that the profile exists in the config or credentials file, and look for `sso_`, `credential_process`, `role_arn` or `aws_access_key_id` only inside that section. Add the container env vars as a source. Keep "not yet verified"; STS verifies in Phase 5.
 
-- [ ] **B4 · P1 · `✓ ✗ !` turn into garbage on legacy Windows consoles**
+- [x] **B4 · P1 · `✓ ✗ !` turn into garbage on legacy Windows consoles**
   *Fix:* use ASCII (`[ok] [x] [!]`) when the console is not UTF-8 capable, or when `TERM=dumb`, or on a `--ascii` flag. The `supports-unicode` crate can detect it. Add a test for the ASCII render.
 
-- [ ] **B5 · P1 · `--json` has no output-format version**
+- [x] **B5 · P1 · `--json` has no output-format version**
   `doctor --json` has `version` = the CLI version, which says nothing about the output shape.
   *Fix:* add `"schema_version": 1` to every JSON output. Raise it only on breaking shape changes, and document it (see D2).
 
-- [ ] **B6 · P2 · A crash prints a raw Rust backtrace**
+- [x] **B6 · P2 · A crash prints a raw Rust backtrace**
   *Fix:* `human-panic`, or a `std::panic::set_hook` that prints "this is a bug in shipfile, please report it at <issues URL>" plus the version and OS, and writes the backtrace to a temp file.
 
-- [ ] **B7 · P2 · `-v` and `-q` are parsed but do nothing**
+- [x] **B7 · P2 · `-v` and `-q` are parsed but do nothing**
   *Fix:* when Phase 1 adds logging, set up `tracing` + `tracing-subscriber` writing to stderr. `-v` = debug, `-vv` = trace, `-q` = errors only. Add a `SHIPFILE_LOG` env filter. Never log secret values (redact them in a `Debug` impl).
 
 ---
@@ -146,7 +146,7 @@ Each item has an ID, a priority, the problem and a hint on how to fix it. Tick t
   - man pages via `clap_mangen` in an `xtask`, shipped in release archives
   - shell completions already planned with `clap_complete`
 
-- [ ] **P13 · P2 · More `doctor` checks**
+- [x] **P13 · P2 · More `doctor` checks**
   - local ports free: 5432, 8000, 9324 (try binding `127.0.0.1:<port>`)
   - free disk space (warn below about 5 GB)
   - `git` installed
